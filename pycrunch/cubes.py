@@ -47,7 +47,6 @@ def fetch_cube(dataset, dimensions, weight=None, **measures):
 class Cube(elements.Element):
 
     element = "crunch:cube"
-    navigation_collections = ()
 
 
 def count(*args):
@@ -66,6 +65,3 @@ count.result = lambda data, n_missing: {
         }
     }
 }
-
-# TODO: make this __meta__?
-elements.elements["crunch:cube"] = Cube

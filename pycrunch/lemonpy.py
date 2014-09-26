@@ -20,8 +20,23 @@ class ServerError(LemonPyError):
 
 
 class ResponseHandler(object):
+    """A requests.Session response-hook aware of status and Content-Type.
 
-    deserializers = {
+    When an instance of this class is set as Session.hooks['response'],
+    all Response objects are passed to its __call__ method. That method
+    looks for a handler on itself for the specific response status code,
+    such as "self.status_204(r)", passes the Response object to it,
+    and returns its output (which MUST be a Response object, and is
+    typically the given one). If no specific handler method is found,
+    a more general handler is sought for the class of the response status,
+    such as "self.status_2xx(r)". If neither is found, an AttributeError
+    is raised.
+
+    Assuming a handler is found, it should call self.parse_payload(r),
+    which attempts to parse the Response based on its Content-Type.
+    """
+
+    parsers = {
         'application/json': lambda session, r: r.json()
     }
 
@@ -41,26 +56,35 @@ class ResponseHandler(object):
         if handler is not None:
             return handler(r)
 
-        raise ValueError("Unhandled response status %s" % r.status_code)
+        raise AttributeError("No handler found for response status %s" %
+                             r.status_code)
 
     def parse_payload(self, r):
+        """Attach a .payload to the given Response.
+
+        If the Content-Type of the given Response has a parser function
+        registered in self.parsers, it will be called as parser(session, r);
+        whatever it returns will be attached as r.payload. If no parser
+        function exists, r.payload is set to None, and the caller will
+        have to examine the Response directly to determine its payload.
+        """
         ct = r.headers.get("Content-Type").split(";", 1)[0]
-        deserializer = self.deserializers.get(ct, None)
-        if deserializer is None:
+        parser = self.parsers.get(ct, None)
+        if parser is None:
             r.payload = None
         else:
-            r.payload = deserializer(self.session, r)
+            r.payload = parser(self.session, r)
 
     def status_2xx(self, r):
         self.parse_payload(r)
         return r
-    status_200 = status_2xx
 
-    def status_201(self, r):
-        # the caller will have to look up r.headers["Location"]
+    # status_201 = status_2xx # The caller must look up r.headers["Location"]
+
+    def status_204(self, r):
+        # TODO: should we warn here if there is a payload?
+        r.payload = None
         return r
-
-    status_204 = status_200
 
     def status_4xx(self, r):
         self.parse_payload(r)

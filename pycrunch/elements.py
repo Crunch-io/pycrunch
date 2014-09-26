@@ -1,3 +1,26 @@
+"""LemonPy handlers for JSON payloads, especially those with an "element" member.
+
+The base lemonpy parser for JSON returns the JSON text deserialized into
+Python dicts, lists, etc. This module does the same, but wherever the base
+parser would return a dict, it replaces that with a JSONObject instance.
+JSONObject is itself a subclass of dict, so all the dict attributes and
+methods are still present; however, the JSONObject has a .json property
+and a nicer repr/str output. It also allows reading keys as if they were
+attributes, so instead of foo['bar'][0]['baz'] you can write foo.bar[0].baz.
+
+When a JSON object has an "element" member, however, a specialized subclass
+of JSONObject is chosen instead. These include a reference to the session,
+and can therefore implement additional HTTP requests very naturally.
+Any subclass of Element is automatically registered using its .element
+class attribute. For example, the class definition:
+
+    class Foo(Element):
+        element = "myapp:foo"
+
+...would result in any JSON object with an {"element": "myapp:foo"} member
+being parsed into an instance of Foo, rather than a bare JSONObject.
+"""
+
 import json
 
 from pycrunch import lemonpy
@@ -36,43 +59,32 @@ class JSONObject(dict):
         return self.__class__(**self)
 
 
+class ElementMeta(type):
+    """A metaclass for Element subclasses which registers them."""
+
+    def __new__(cls, name, bases, d):
+        new_type = type.__new__(cls, name, bases, d)
+        if 'element' in d:
+            # Skip any subclass which has no 'element' attribute,
+            # (including Element itself!) to allow for additional
+            # base classes.
+            elements[d['element']] = new_type
+        return new_type
+
+
 class Element(JSONObject):
     """A base class for JSON objects classified by an 'element' member."""
 
-    def __init__(_non_colliding_self, session, **members):
-        _non_colliding_self.session = session
-        members.setdefault("element", _non_colliding_self.__class__.element)
-        super(Element, _non_colliding_self).__init__(**members)
+    __metaclass__ = ElementMeta
 
-    def __getattr__(self, key):
-        # Return the requested attribute if present in self.keys
-        v = self.get(key, omitted)
-        if v is not omitted:
-            return v
-
-        # If the requested attribute is present in a URL collection,
-        # do a GET and return its payload.
-        for collname in self.navigation_collections:
-            coll = self.get(collname, {})
-            if key in coll:
-                return self.session.get(coll[key]).payload
-
-        raise AttributeError(
-            "%s has no attribute %s" % (self.__class__.__name__, key))
+    def __init__(__this__, session, **members):
+        __this__.session = session
+        members.setdefault("element", __this__.__class__.element)
+        super(Element, __this__).__init__(**members)
 
     def copy(self):
         """Return a (shallow) copy of self."""
         return self.__class__(self.session, **self)
-
-    def post(self, *args, **kwargs):
-        kwargs.setdefault('headers', {})
-        kwargs["headers"].setdefault("Content-Type", "application/json")
-        return self.session.post(self.self, *args, **kwargs)
-
-    def patch(self, *args, **kwargs):
-        kwargs.setdefault('headers', {})
-        kwargs["headers"].setdefault("Content-Type", "application/json")
-        return self.session.patch(self.self, *args, **kwargs)
 
 
 elements = {}
@@ -107,8 +119,14 @@ def parse_json_element_from_response(session, r):
 
 
 class ElementResponseHandler(lemonpy.ResponseHandler):
+    """A lemonpy response handler which parses to JSONObjects and Elements.
 
-    deserializers = {
+    In addition, this subclass traps 401 Unauthorized responses,
+    then attempts to authenticate to Crunch.io, and then repeats
+    the request. That should probably be moved out somewhere else.
+    """
+
+    parsers = {
         'application/json': parse_json_element_from_response
     }
 
