@@ -1,5 +1,6 @@
 import json
-import lemonpy
+
+from pycrunch import lemonpy
 
 omitted = object()
 

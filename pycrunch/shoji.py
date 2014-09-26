@@ -1,3 +1,5 @@
+import json
+
 from pycrunch import elements
 
 
@@ -60,6 +62,9 @@ class Catalog(elements.Element):
                 v[index_attr] = url
 
         return out
+
+    def patch_index(self, index):
+        super(Catalog, self).patch(data=json.dumps(index))
 
 
 class Entity(elements.Element):

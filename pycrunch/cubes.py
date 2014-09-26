@@ -1,17 +1,46 @@
 from pycrunch import elements
 
 
-def fetch_cube(dataset, dimensions, **measures):
-    """Return a shoji.View containing a crunch:cube."""
+def fetch_cube(dataset, dimensions, weight=None, **measures):
+    """Return a shoji.View containing a crunch:cube.
+
+    The dataset entity is used to look up its views.cube URL.
+    The dimensions must be a list of either strings, which are assumed to be
+    URL's of variable Entities to be fetched and analyzed according to type,
+    or objects, which are assumed to be complete variable expressions.
+    """
     dims = []
     for d in dimensions:
-        # TODO: vary this by type
-        ref = {'variable': d.url}
-        dims.append(ref)
+        if isinstance(d, dict):
+            # This is already a Crunch expression.
+            dims.append(d)
+        elif isinstance(d, basestring):
+            ref = {'variable': d}
+            # A URL of a variable entity. GET it to find its type.
+            v = dataset.session.get(d).payload
+            if v.body.type == "numeric":
+                dims.append({"function": "bin", "args": [ref]})
+            elif v.body.type == "datetime":
+                rollup_res = v.body.rollup_resolution
+                dims.append({"function": "rollup", "args": [ref, {"value": rollup_res}]})
+            elif v.body.type == "categorical_array":
+                dims.append(ref)
+                dims.append({"each": d})
+            elif v.body.type == "multiple_response":
+                dims.append({"function": "selected_array", "args": [ref]})
+                dims.append({"each": d})
+            else:
+                dims.append(ref)
+        else:
+            raise TypeError("dimensions must be URL strings or Crunch expression objects.")
+
+    q = elements.JSONObject(dimensions=dims, measures=measures)
+    if weight is not None:
+        q['weight'] = weight
 
     return dataset.session.get(
         dataset.views.cube,
-        params={"query": elements.JSONObject(dimensions=dims, measures=measures).json}
+        params={"query": q.json}
     ).payload
 
 
