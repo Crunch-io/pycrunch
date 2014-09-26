@@ -45,6 +45,7 @@ def fetch_cube(dataset, dimensions, weight=None, **measures):
 
 
 class Cube(elements.Element):
+    """A crunch:cube: the result of calculating measures over dimensions."""
 
     element = "crunch:cube"
 
