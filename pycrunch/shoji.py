@@ -60,6 +60,14 @@ class Document(elements.Element):
         raise AttributeError(
             "%s has no attribute %s" % (self.__class__.__name__, key))
 
+    def refresh(self):
+        r = self.session.get(self.self)
+        if r.payload is None:
+            raise TypeError("Response could not be parsed.", r)
+
+        self.clear()
+        self.update(r.payload)
+
     def post(self, *args, **kwargs):
         kwargs.setdefault('headers', {})
         kwargs["headers"].setdefault("Content-Type", "application/json")
@@ -132,10 +140,20 @@ class Catalog(Document):
             if attr in tupl
         ))
 
-    def add(self, entity_url, attrs=None):
-        """Add the given entity, plus any catalog attributes, to self."""
-        index = {entity_url: attrs or {}}
-        return super(Catalog, self).patch(data=json.dumps(index)).payload
+    def add(self, entity_url, attrs=None, **kwargs):
+        """Add the given entity, plus any spurious index attributes (ICK), to self.
+
+        This is a total hack because Crunch has an endpoint (dataset permissions)
+        where non-tuples are included in a Catalog.index.
+        """
+        kwargs[entity_url] = attrs or {}
+        p = json.dumps(dict(element="shoji:catalog", index=kwargs))
+        return super(Catalog, self).patch(data=p).payload
+
+    def edit(self, entity_url, **attrs):
+        """Update the entity with the new attributes."""
+        p = self.__class__(self.session, index={entity_url: attrs})
+        return super(Catalog, self).patch(data=p.json).payload
 
 
 class Entity(Document):
@@ -148,6 +166,13 @@ class Entity(Document):
         if 'self' in members:
             members['body'] = Tuple(session, members['self'], **members['body'])
         super(Entity, __this__).__init__(session, **members)
+
+    def edit(self, **body_attrs):
+        """Update the entity with the new body attributes."""
+        p = self.__class__(self.session, body=body_attrs)
+        payload = super(Entity, self).patch(data=p.json).payload
+        self.body.update(body_attrs)
+        return payload
 
 
 class View(Document):

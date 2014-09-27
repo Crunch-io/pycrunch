@@ -1,3 +1,4 @@
+from cStringIO import StringIO
 import mimetypes
 import os
 import time
@@ -28,6 +29,13 @@ class Importer(object):
         else:
             raise ValueError("The batch did not reach the '%s' state in the "
                              "given time. Please check again later." % status)
+
+    def append_csv_string(self, ds, csv_string, filename=None):
+        """Append the given string of CSV data to the dataset. Return its Batch."""
+        if filename is None:
+            filename = 'upload.csv'
+        source_url = self.add_source(ds, filename, StringIO(csv_string), "text/csv")
+        return self.create_batch_from_source(ds, source_url)
 
     def append_stream(self, ds, fp, filename=None, mimetype=None):
         """Append the given file-like object to the dataset. Return its Batch."""
@@ -79,3 +87,7 @@ class Importer(object):
 
         # Wait for the batch to be imported...
         return self.wait_for_batch_status(batch, 'imported')
+
+
+importer = Importer()
+"""A default Importer."""
