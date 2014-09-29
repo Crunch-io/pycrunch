@@ -26,6 +26,7 @@ class Tuple(elements.JSONObject):
     def __init__(self, session, entity_url, **members):
         self.session = session
         self.entity_url = entity_url
+        self._entity = None
         super(Tuple, self).__init__(**members)
 
     def copy(self):
@@ -37,6 +38,19 @@ class Tuple(elements.JSONObject):
         if r.payload is None:
             raise TypeError("Response could not be parsed.", r)
         return r.payload
+
+    @property
+    def entity(self):
+        """Fetch, cache, and return the shoji.Entity for self.entity_url.
+
+        This is typically used from a Catalog Tuple to GET the associated
+        Entity body attributes; e.g. foo.variables['bar'].entity.body.qux.
+        However, it can also be used from an Entity.body tuple to obtain
+        a copy of the whole Entity; e.g. bar2 = bar.body.entity.
+        """
+        if self._entity is None:
+            self._entity = self.fetch()
+        return self._entity
 
 
 class Document(elements.Element):
