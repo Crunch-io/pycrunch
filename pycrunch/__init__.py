@@ -11,7 +11,12 @@ __all__ = [
     'elements',
     'shoji',
     'importing',
-    'ClientError', 'ServerError',
+    'ClientError', 'ServerError', 'CrunchError'
     'Session',
     'urljoin'
 ]
+
+
+class CrunchError(elements.Element):
+
+    element = "crunch:error"
