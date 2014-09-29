@@ -44,7 +44,7 @@ class Tuple(elements.JSONObject):
         """Fetch, cache, and return the shoji.Entity for self.entity_url.
 
         This is typically used from a Catalog Tuple to GET the associated
-        Entity body attributes; e.g. foo.variables['bar'].entity.body.qux.
+        Entity body attributes; e.g. foo_catalog['bar'].entity.body.qux.
         However, it can also be used from an Entity.body tuple to obtain
         a copy of the whole Entity; e.g. bar2 = bar.body.entity.
         """
@@ -75,12 +75,14 @@ class Document(elements.Element):
             "%s has no attribute %s" % (self.__class__.__name__, key))
 
     def refresh(self):
+        """GET self.self, update self with its payload and return self."""
         r = self.session.get(self.self)
         if r.payload is None:
             raise TypeError("Response could not be parsed.", r)
 
         self.clear()
         self.update(r.payload)
+        return self
 
     def post(self, *args, **kwargs):
         kwargs.setdefault('headers', {})
@@ -110,6 +112,18 @@ class Catalog(Document):
     def create(self, entity=None, refresh=None):
         """POST the given Entity to this catalog to create a new resource.
 
+        The 'entity' arg may be a complete shoji.Entity, in which case
+        its .json will be POST'ed to this Catalog, or it may be a plain
+        dict of attributes, in which case it will first be wrapped in an
+        Entity. This latter case is more common simply for the fact that
+        it results in cleaner calling code; compare:
+
+            foo_catalog.create(pycrunch.shoji.Entity(my.session, bar=qux))
+
+        versus:
+
+            foo_catalog.create({"bar": qux})
+
         An entity is returned. If 'refresh' is:
 
             * True: an additional GET is performed and the Entity it fetches
@@ -126,6 +140,8 @@ class Catalog(Document):
 
         if entity is None:
             entity = Entity(self.session)
+        elif isinstance(entity, dict) and not isinstance(entity, Entity):
+            entity = Entity(self.session, **entity)
 
         r = self.post(data=entity.json)
         new_url = r.headers["Location"]
