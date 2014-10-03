@@ -20,3 +20,8 @@ __all__ = [
 class CrunchError(elements.Element):
 
     element = "crunch:error"
+
+
+class CrunchTable(elements.Document):
+
+    element = "crunch:table"

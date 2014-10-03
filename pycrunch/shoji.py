@@ -53,49 +53,7 @@ class Tuple(elements.JSONObject):
         return self._entity
 
 
-class Document(elements.Element):
-    """A base class for Shoji Documents."""
-
-    navigation_collections = ()
-
-    def __getattr__(self, key):
-        # Return the requested attribute if present in self.keys
-        v = self.get(key, elements.omitted)
-        if v is not elements.omitted:
-            return v
-
-        # If the requested attribute is present in a URL collection,
-        # do a GET and return its payload.
-        for collname in self.navigation_collections:
-            coll = self.get(collname, {})
-            if key in coll:
-                return self.session.get(coll[key]).payload
-
-        raise AttributeError(
-            "%s has no attribute %s" % (self.__class__.__name__, key))
-
-    def refresh(self):
-        """GET self.self, update self with its payload and return self."""
-        r = self.session.get(self.self)
-        if r.payload is None:
-            raise TypeError("Response could not be parsed.", r)
-
-        self.clear()
-        self.update(r.payload)
-        return self
-
-    def post(self, *args, **kwargs):
-        kwargs.setdefault('headers', {})
-        kwargs["headers"].setdefault("Content-Type", "application/json")
-        return self.session.post(self.self, *args, **kwargs)
-
-    def patch(self, *args, **kwargs):
-        kwargs.setdefault('headers', {})
-        kwargs["headers"].setdefault("Content-Type", "application/json")
-        return self.session.patch(self.self, *args, **kwargs)
-
-
-class Catalog(Document):
+class Catalog(elements.Document):
     """A Shoji Catalog."""
 
     element = "shoji:catalog"
@@ -186,7 +144,7 @@ class Catalog(Document):
         return super(Catalog, self).patch(data=p.json).payload
 
 
-class Entity(Document):
+class Entity(elements.Document):
 
     element = "shoji:entity"
     navigation_collections = ("catalogs", "fragments", "views", "urls")
@@ -205,7 +163,7 @@ class Entity(Document):
         return payload
 
 
-class View(Document):
+class View(elements.Document):
 
     element = "shoji:view"
     navigation_collections = ("views", "urls")
