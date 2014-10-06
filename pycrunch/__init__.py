@@ -18,7 +18,7 @@ __all__ = [
 
 
 class CrunchError(elements.Element):
-    
+
     element = "crunch:error"
 
 
