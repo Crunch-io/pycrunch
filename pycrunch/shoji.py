@@ -167,3 +167,13 @@ class View(elements.Document):
 
     element = "shoji:view"
     navigation_collections = ("views", "urls")
+
+    @property
+    def value(self):
+        return self['value']
+
+    @value.setter
+    def value(self, newvalue):
+        """Update the View with the new value."""
+        self['value'] = newvalue
+        super(View, self).put(data=self.json)

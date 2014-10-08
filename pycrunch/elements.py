@@ -150,6 +150,11 @@ class Document(Element):
         kwargs["headers"].setdefault("Content-Type", "application/json")
         return self.session.post(self.self, *args, **kwargs)
 
+    def put(self, *args, **kwargs):
+        kwargs.setdefault('headers', {})
+        kwargs["headers"].setdefault("Content-Type", "application/json")
+        return self.session.put(self.self, *args, **kwargs)
+
     def patch(self, *args, **kwargs):
         kwargs.setdefault('headers', {})
         kwargs["headers"].setdefault("Content-Type", "application/json")
