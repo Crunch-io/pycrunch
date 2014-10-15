@@ -145,20 +145,26 @@ class Document(Element):
         self.update(r.payload)
         return self
 
-    def post(self, *args, **kwargs):
+    def post(self, data, *args, **kwargs):
         kwargs.setdefault('headers', {})
         kwargs["headers"].setdefault("Content-Type", "application/json")
-        return self.session.post(self.self, *args, **kwargs)
+        if isinstance(data, dict):
+            data = json.dumps(data)
+        return self.session.post(self.self, data, *args, **kwargs)
 
-    def put(self, *args, **kwargs):
+    def put(self, data, *args, **kwargs):
         kwargs.setdefault('headers', {})
         kwargs["headers"].setdefault("Content-Type", "application/json")
-        return self.session.put(self.self, *args, **kwargs)
+        if isinstance(data, dict):
+            data = json.dumps(data)
+        return self.session.put(self.self, data, *args, **kwargs)
 
-    def patch(self, *args, **kwargs):
+    def patch(self, data, *args, **kwargs):
         kwargs.setdefault('headers', {})
         kwargs["headers"].setdefault("Content-Type", "application/json")
-        return self.session.patch(self.self, *args, **kwargs)
+        if isinstance(data, dict):
+            data = json.dumps(data)
+        return self.session.patch(self.self, data, *args, **kwargs)
 
 
 # -------------------------- HTTP request helpers -------------------------- #
