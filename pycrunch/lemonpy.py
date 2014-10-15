@@ -1,7 +1,6 @@
-import requests
-from requests.compat import urljoin
-
 import logging
+
+import requests
 requests_log = logging.getLogger("requests")
 requests_log.setLevel(logging.WARNING)
 
@@ -15,6 +14,10 @@ class ClientError(LemonPyError):
 
     def __init__(self, response):
         super(ClientError, self).__init__(response, response.request.url, response.payload)
+
+    @property
+    def status(self):
+        return self.args[0].status
 
 
 class ServerError(LemonPyError):
