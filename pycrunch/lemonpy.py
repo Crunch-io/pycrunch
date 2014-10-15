@@ -3,7 +3,7 @@ import logging
 import requests
 requests_log = logging.getLogger("requests")
 requests_log.setLevel(logging.WARNING)
-
+urljoin = requests.compat.urljoin
 
 class LemonPyError(Exception):
     """Base class for Exceptions which occur within LemonPy."""
