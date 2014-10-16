@@ -166,6 +166,8 @@ class Document(Element):
             data = json.dumps(data)
         return self.session.patch(self.self, data, *args, **kwargs)
 
+    def delete(self):
+        return self.session.delete(self.self)
 
 # -------------------------- HTTP request helpers -------------------------- #
 
