@@ -1,9 +1,11 @@
 import logging
 
 import requests
+
 requests_log = logging.getLogger("requests")
 requests_log.setLevel(logging.WARNING)
 urljoin = requests.compat.urljoin
+
 
 class LemonPyError(Exception):
     """Base class for Exceptions which occur within LemonPy."""
@@ -13,17 +15,19 @@ class LemonPyError(Exception):
 class ClientError(LemonPyError):
 
     def __init__(self, response):
-        super(ClientError, self).__init__(response, response.request.url, response.payload)
+        super(ClientError, self).__init__(response, response.request.url,
+                                          response.payload)
 
     @property
-    def status(self):
-        return self.args[0].status
+    def status_code(self):
+        return self.args[0].status_code
 
 
 class ServerError(LemonPyError):
 
     def __init__(self, response):
-        super(ServerError, self).__init__(response, response.request.url, response.payload)
+        super(ServerError, self).__init__(response, response.request.url,
+                                          response.payload)
 
 
 class ResponseHandler(object):
