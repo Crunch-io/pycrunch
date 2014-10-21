@@ -22,6 +22,10 @@ class ClientError(LemonPyError):
     def status_code(self):
         return self.args[0].status_code
 
+    @property
+    def message(self):
+        return self.args[2]['message']
+
 
 class ServerError(LemonPyError):
 
