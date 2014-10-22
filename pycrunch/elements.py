@@ -148,21 +148,21 @@ class Document(Element):
     def post(self, data, *args, **kwargs):
         kwargs.setdefault('headers', {})
         kwargs["headers"].setdefault("Content-Type", "application/json")
-        if isinstance(data, dict):
+        if not isinstance(data, basestring):
             data = json.dumps(data)
         return self.session.post(self.self, data, *args, **kwargs)
 
     def put(self, data, *args, **kwargs):
         kwargs.setdefault('headers', {})
         kwargs["headers"].setdefault("Content-Type", "application/json")
-        if isinstance(data, dict):
+        if not isinstance(data, basestring):
             data = json.dumps(data)
         return self.session.put(self.self, data, *args, **kwargs)
 
     def patch(self, data, *args, **kwargs):
         kwargs.setdefault('headers', {})
         kwargs["headers"].setdefault("Content-Type", "application/json")
-        if isinstance(data, dict):
+        if not isinstance(data, basestring):
             data = json.dumps(data)
         return self.session.patch(self.self, data, *args, **kwargs)
 
