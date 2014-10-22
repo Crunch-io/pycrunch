@@ -68,25 +68,29 @@ class Importer(object):
             sources_url, files={"uploaded_file": (filename, fp, mimetype)}
         ).headers["Location"]
 
-    def create_batch_from_source(self, ds, source_url):
+    def create_batch_from_source(self, ds, source_url, workflow=None, async=False):
         """Create and return a Batch on the given dataset for the given source."""
-        # TODO: support async=False
         batch = shoji.Entity(ds.session, body={
             'source': source_url,
-            'workflow': [],
-            'async': True,
+            'workflow': workflow or [],
+            'async': async,
         })
         ds.batches.create(batch)
 
-        # Wait for the batch to be ready...
-        self.wait_for_batch_status(batch, 'ready')
+        if async:
+            # Wait for the batch to be ready...
+            self.wait_for_batch_status(batch, 'ready')
 
         # Tell the batch to start appending.
         batch_part = shoji.Entity(batch.session, body={'status': 'importing'})
         batch.patch(data=batch_part.json)
 
         # Wait for the batch to be imported...
-        return self.wait_for_batch_status(batch, 'imported')
+        if async:
+            return self.wait_for_batch_status(batch, 'imported')
+        else:
+            batch.refresh()
+            return batch
 
 
 importer = Importer()
