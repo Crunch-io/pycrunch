@@ -7,7 +7,7 @@ A Python client library for Crunch.io.
 Using pycrunch
 --------------
 
-To use pycrunch in your project, run::
+To use pycrunch in your project, run:
 
     $ python setup.py develop
 
@@ -16,13 +16,13 @@ This will make the code in this directory available to other projects.
 Getting started
 ---------------
 
-Start a simple session via::
+Start a simple session via:
 
     >>> import pycrunch
     >>> session = pycrunch.Session("me@mycompany.com", password)
     >>> site = session.get("https://beta.crunch.io/api/").payload
 
-Then, you can browse the site. Use `print` to pretty-indent JSON payloads::
+Then, you can browse the site. Use `print` to pretty-indent JSON payloads:
 
     >>> print site
     pycrunch.shoji.Catalog(**{
@@ -43,7 +43,7 @@ Then, you can browse the site. Use `print` to pretty-indent JSON payloads::
         }
     })
 
-URI's in payloads' catalogs, views, fragments, and urls collections are followable automatically::
+URI's in payloads' catalogs, views, fragments, and urls collections are followable automatically:
 
     >>> print site.datasets
     pycrunch.shoji.Catalog(**{
@@ -62,7 +62,7 @@ URI's in payloads' catalogs, views, fragments, and urls collections are followab
         ...
     })
 
-Each recognized JSON payload also automatically gives dotted-attribute access to the members of each JSON object::
+Each recognized JSON payload also automatically gives dotted-attribute access to the members of each JSON object:
 
     >>> print site.datasets.index.values()[0]
     pycrunch.shoji.Tuple(**{
@@ -74,7 +74,7 @@ Each recognized JSON payload also automatically gives dotted-attribute access to
         "name": "Hog futures tracking (May 2014)"
     })
 
-Responses may also possess additional helpers, like the `entity` property of each Tuple in a catalog's index, which follows the link to the Entity resource::
+Responses may also possess additional helpers, like the `entity` property of each Tuple in a catalog's index, which follows the link to the Entity resource:
 
     >>> print site.datasets.index.values()[0].entity
     pycrunch.shoji.Entity(**{
@@ -108,4 +108,30 @@ Responses may also possess additional helpers, like the `entity` property of eac
         "fragments": {
             "table": "https://beta.crunch.io/api/datasets/dbf9fca7b727/table/"
         }
+    })
+
+You typically add new resources to a Catalog via its `create` method:
+
+    >>> ds = site.datasets.create({"body": {
+            'name': "My first dataset"
+        }}, refresh=True)
+    >>> gender = ds.variables.create({"body": {
+            'name': 'Gender',
+            'alias': 'gender',
+            'type': 'categorical',
+            'categories': [
+                {'id': -1, 'name': 'No Data', 'numeric_value': None, 'missing': True},
+                {'id': 1, 'name': 'M', 'numeric_value': None, 'missing': False},
+                {'id': 2, 'name': 'F', 'numeric_value': None, 'missing': False}
+            ],
+            'values': [1, 2, {"?": -1}, 2]
+        }}, refresh=True)
+    >>> print ds.table.data
+    pycrunch.elements.JSONObject(**{
+        "e7f361628": [
+            1,
+            2,
+            {"?": -1},
+            2
+        ]
     })
