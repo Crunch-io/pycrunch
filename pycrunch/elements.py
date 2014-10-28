@@ -114,7 +114,8 @@ class Document(Element):
 
     Documents are considered "top-level" objects that may be returned
     as a complete payload; they therefore include helper functions
-    for refreshing themselves, post, and patch.
+    for refreshing themselves (via HTTP GET), plus post, put, patch,
+    and delete. Not every resource is guaranteed to respond to all.
     """
 
     navigation_collections = ()

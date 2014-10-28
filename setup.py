@@ -30,7 +30,7 @@ setup(
     ],
     author=u'Crunch.io',
     author_email='dev@crunch.io',
-    license='Proprietary',
+    license='LGPL',
     install_requires=[
         'requests>=2.3.0',
     ],
