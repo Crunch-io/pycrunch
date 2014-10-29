@@ -43,7 +43,8 @@ Then, you can browse the site. Use `print` to pretty-indent JSON payloads:
         }
     })
 
-URI's in payloads' catalogs, views, fragments, and urls collections are followable automatically:
+URI's in payloads' catalogs, views, fragments, and urls collections
+are followable automatically:
 
     >>> print site.datasets
     pycrunch.shoji.Catalog(**{
@@ -62,7 +63,8 @@ URI's in payloads' catalogs, views, fragments, and urls collections are followab
         ...
     })
 
-Each recognized JSON payload also automatically gives dotted-attribute access to the members of each JSON object:
+Each recognized JSON payload also automatically gives dotted-attribute
+access to the members of each JSON object:
 
     >>> print site.datasets.index.values()[0]
     pycrunch.shoji.Tuple(**{
@@ -74,7 +76,11 @@ Each recognized JSON payload also automatically gives dotted-attribute access to
         "name": "Hog futures tracking (May 2014)"
     })
 
-Responses may also possess additional helpers, like the `entity` property of each Tuple in a catalog's index, which follows the link to the Entity resource:
+Responses may also possess additional helpers, like the `entity` property of
+each Tuple in a catalog's index, which follows the link to the Entity resource:
+
+    >>> print site.datasets.index.values()[0].entity_url
+    "https://beta.crunch.io/api/datasets/dbf9fca7b727/"
 
     >>> print site.datasets.index.values()[0].entity
     pycrunch.shoji.Entity(**{
