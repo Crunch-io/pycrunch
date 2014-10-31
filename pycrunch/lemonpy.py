@@ -1,9 +1,10 @@
 import logging
+import urlparse
 
 import requests
 
 requests_log = logging.getLogger("requests")
-requests_log.setLevel(logging.WARNING)
+requests_log.setLevel(logging.DEBUG)
 urljoin = requests.compat.urljoin
 
 
@@ -119,3 +120,41 @@ class Session(requests.Session):
         super(Session, self).__init__()
         self.headers = self.__class__.headers
         self.hooks["response"] = self.handler_class(self)
+
+
+class URL(str):
+    """A subclass of str for URL's. self.absolute = urljoin(self.base, self)."""
+
+    def __new__(cls, value, *args, **kwargs):
+        return str.__new__(cls, value)
+
+    def __init__(self, value, base):
+        base, frag = urlparse.urldefrag(base)
+        self.base = base
+
+    @property
+    def absolute(self):
+        """Return self, which may be relative to self.base, as an absolute URL."""
+        return urljoin(self.base, self)
+
+    def relative_to(self, base):
+        """Return self, relative to the given absolute base."""
+        base = urlparse.urlparse(base)
+        new = urlparse.urlparse(self.absolute)
+
+        if base.scheme != new.scheme or base.netloc != new.netloc:
+            return self.absolute
+
+        base_path = base.path.split('/')[:-1]
+        new_path = new.path.split('/')
+        while base_path and new_path:
+            a, b = base_path[0], new_path[0]
+            if a != b:
+                break
+            base_path.pop(0)
+            new_path.pop(0)
+        new_path = (['..'] * len(base_path)) + new_path
+        new_path = '/'.join(new_path)
+
+        return urlparse.urlunparse(("", "", new_path,
+                                    new.params, new.query, new.fragment))

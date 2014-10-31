@@ -7,6 +7,7 @@ for the latest Shoji specification.
 import json
 
 from pycrunch import elements
+from pycrunch.lemonpy import URL
 
 
 class Tuple(elements.JSONObject):
@@ -53,6 +54,23 @@ class Tuple(elements.JSONObject):
         return self._entity
 
 
+class Index(elements.JSONObject):
+    """The index of a Shoji Catalog.
+
+    Shoji Catalogs have an 'index' member, which maps lemonpy.URL's to Tuples.
+    """
+
+    def __init__(self, session, catalog_url, **members):
+        self.session = session
+        self.catalog_url = catalog_url
+        members = dict(
+            (URL(entity_url, catalog_url),
+             None if tup is None else Tuple(session, entity_url, **tup))
+            for entity_url, tup in members.iteritems()
+        )
+        super(Index, self).__init__(**members)
+
+
 class Catalog(elements.Document):
     """A Shoji Catalog."""
 
@@ -61,10 +79,7 @@ class Catalog(elements.Document):
 
     def __init__(__this__, session, **members):
         if 'index' in members:
-            members['index'] = dict(
-                (entity_url, Tuple(session, entity_url, **tup))
-                for entity_url, tup in members['index'].iteritems()
-            )
+            members['index'] = Index(session, members['self'], **members['index'])
         super(Catalog, __this__).__init__(session, **members)
 
     def create(self, entity=None, refresh=None):
@@ -135,13 +150,23 @@ class Catalog(elements.Document):
         where non-tuples are included in a Catalog.index.
         """
         kwargs[entity_url] = attrs or {}
-        p = json.dumps(dict(element="shoji:catalog", index=kwargs))
-        return super(Catalog, self).patch(data=p).payload
+        p = json.dumps(dict(element="shoji:catalog", self=self.self, index=kwargs))
+        return self.patch(data=p).payload
 
     def edit(self, entity_url, **attrs):
-        """Update the entity with the new attributes."""
-        p = self.__class__(self.session, index={entity_url: attrs})
-        return super(Catalog, self).patch(data=p.json).payload
+        """Update the catalog with the given entity attributes."""
+        p = self.__class__(self.session, self=self.self, index={entity_url: attrs})
+        return self.patch(data=p.json).payload
+
+    def edit_index(self, index):
+        """Update the catalog with the given (probably partial) index."""
+        p = self.__class__(self.session, self=self.self, index=index)
+        return self.patch(data=p.json).payload
+
+    def drop(self, entity_url):
+        """Delete the given entity from the catalog."""
+        p = self.__class__(self.session, self=self.self, index={entity_url: None})
+        return self.patch(data=p.json).payload
 
 
 class Entity(elements.Document):
