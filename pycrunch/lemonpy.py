@@ -4,7 +4,7 @@ import urlparse
 import requests
 
 requests_log = logging.getLogger("requests")
-requests_log.setLevel(logging.DEBUG)
+requests_log.setLevel(logging.WARNING)
 urljoin = requests.compat.urljoin
 
 
