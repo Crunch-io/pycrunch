@@ -21,7 +21,7 @@ def fetch_cube(dataset, dimensions, weight=None, **measures):
             if v.body.type == "numeric":
                 dims.append({"function": "bin", "args": [ref]})
             elif v.body.type == "datetime":
-                rollup_res = v.body.rollup_resolution
+                rollup_res = v.body.view.get("rollup_resolution", None)
                 dims.append({"function": "rollup", "args": [ref, {"value": rollup_res}]})
             elif v.body.type == "categorical_array":
                 dims.append(ref)
