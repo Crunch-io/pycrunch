@@ -8,10 +8,13 @@ from pycrunch import shoji
 
 class Importer(object):
 
-    def __init__(self, async=True, retries=40, frequency=0.25):
+    def __init__(self, async=True, retries=40, frequency=0.25,
+                 backoff_rate=1.1, backoff_max=30):
         self.async = async
         self.retries = retries
         self.frequency = frequency
+        self.backoff_rate = backoff_rate
+        self.backoff_max = backoff_max
 
     def wait_for_batch_status(self, batch, status):
         """Wait for the given status and return the batch. Error if not reached."""
@@ -26,6 +29,10 @@ class Importer(object):
                 return new_batch
             else:
                 time.sleep(self.frequency)
+                if self.frequency < self.backoff_max:
+                    self.frequency *= self.backoff_rate
+                    if self.frequency > self.backoff_max:
+                        self.frequency = self.backoff_max
         else:
             raise ValueError("The batch did not reach the '%s' state in the "
                              "given time. Please check again later." % status)
