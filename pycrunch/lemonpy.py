@@ -1,3 +1,5 @@
+from __future__ import division
+
 import logging
 
 from six.moves import urllib
@@ -69,7 +71,7 @@ class ResponseHandler(object):
             return handler(r)
 
         # If that fails, look for a Nxx code
-        handler = getattr(self, "status_%dxx" % (code / 100), None)
+        handler = getattr(self, "status_%dxx" % (code // 100), None)
         if handler is not None:
             return handler(r)
 
