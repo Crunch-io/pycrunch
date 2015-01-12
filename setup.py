@@ -22,7 +22,7 @@ def get_long_desc():
         return stream.read()
 
 
-setup(
+setup_params = dict(
     name='pycrunch',
     version=version,
     description="Crunch.io Client Library",
@@ -53,3 +53,6 @@ setup(
     zip_safe=True,
     entry_points={},
 )
+
+if __name__ == '__main__':
+    setup(**setup_params)
