@@ -1,3 +1,5 @@
+import six
+
 from pycrunch import elements
 
 
@@ -14,7 +16,7 @@ def fetch_cube(dataset, dimensions, weight=None, **measures):
         if isinstance(d, dict):
             # This is already a Crunch expression.
             dims.append(d)
-        elif isinstance(d, basestring):
+        elif isinstance(d, six.string_types):
             ref = {'variable': d}
             # A URL of a variable entity. GET it to find its type.
             v = dataset.session.get(d).payload

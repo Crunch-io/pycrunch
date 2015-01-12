@@ -23,6 +23,8 @@ being parsed into an instance of Foo, rather than a bare JSONObject.
 
 import json
 
+import six
+
 from pycrunch import lemonpy
 
 omitted = object()
@@ -149,21 +151,21 @@ class Document(Element):
     def post(self, data, *args, **kwargs):
         kwargs.setdefault('headers', {})
         kwargs["headers"].setdefault("Content-Type", "application/json")
-        if not isinstance(data, basestring):
+        if not isinstance(data, six.string_types):
             data = json.dumps(data)
         return self.session.post(self.self, data, *args, **kwargs)
 
     def put(self, data, *args, **kwargs):
         kwargs.setdefault('headers', {})
         kwargs["headers"].setdefault("Content-Type", "application/json")
-        if not isinstance(data, basestring):
+        if not isinstance(data, six.string_types):
             data = json.dumps(data)
         return self.session.put(self.self, data, *args, **kwargs)
 
     def patch(self, data, *args, **kwargs):
         kwargs.setdefault('headers', {})
         kwargs["headers"].setdefault("Content-Type", "application/json")
-        if not isinstance(data, basestring):
+        if not isinstance(data, six.string_types):
             data = json.dumps(data)
         return self.session.patch(self.self, data, *args, **kwargs)
 

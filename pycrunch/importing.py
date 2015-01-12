@@ -3,6 +3,8 @@ import os
 import time
 import io
 
+import six
+
 from pycrunch import shoji
 
 
@@ -134,7 +136,7 @@ def place(dataset, key, ids, data):
 
     On success, this returns None, otherwise, an error is raised.
     """
-    if isinstance(key, basestring):
+    if isinstance(key, six.string_types):
         key = {"variable": key}
     elif isinstance(key, dict):
         pass
