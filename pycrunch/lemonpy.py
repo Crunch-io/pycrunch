@@ -88,11 +88,8 @@ class ResponseHandler(object):
         have to examine the Response directly to determine its payload.
         """
         ct = r.headers.get("Content-Type").split(";", 1)[0]
-        parser = self.parsers.get(ct, None)
-        if parser is None:
-            r.payload = None
-        else:
-            r.payload = parser(self.session, r)
+        parser = self.parsers.get(ct)
+        r.payload = parser(self.session, r) if parser else None
 
     def status_2xx(self, r):
         self.parse_payload(r)
