@@ -1,7 +1,7 @@
-from cStringIO import StringIO
 import mimetypes
 import os
 import time
+import io
 
 from pycrunch import shoji
 
@@ -41,7 +41,8 @@ class Importer(object):
         """Append the given string of CSV data to the dataset. Return its Batch."""
         if filename is None:
             filename = 'upload.csv'
-        source_url = self.add_source(ds, filename, StringIO(csv_string), "text/csv")
+        fp = io.BytesIO(csv_string)
+        source_url = self.add_source(ds, filename, fp, "text/csv")
         return self.create_batch_from_source(ds, source_url)
 
     def append_stream(self, ds, fp, filename=None, mimetype=None):
