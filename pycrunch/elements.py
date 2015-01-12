@@ -74,10 +74,9 @@ class ElementMeta(type):
         return new_type
 
 
+@six.add_metaclass(ElementMeta)
 class Element(JSONObject):
     """A base class for JSON objects classified by an 'element' member."""
-
-    __metaclass__ = ElementMeta
 
     def __init__(__this__, session, **members):
         __this__.session = session
