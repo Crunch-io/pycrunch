@@ -39,6 +39,7 @@ setup(
     license='LGPL',
     install_requires=[
         'requests>=2.3.0',
+        'six',
     ],
     tests_require=[
         'nose>=1.1.2',

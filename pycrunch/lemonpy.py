@@ -1,5 +1,6 @@
 import logging
-import urlparse
+
+from six.moves import urllib
 
 import requests
 
@@ -129,7 +130,7 @@ class URL(str):
         return str.__new__(cls, value)
 
     def __init__(self, value, base):
-        base, frag = urlparse.urldefrag(base)
+        base, frag = urllib.parse.urldefrag(base)
         self.base = base
 
     @property
@@ -139,8 +140,8 @@ class URL(str):
 
     def relative_to(self, base):
         """Return self, relative to the given absolute base."""
-        base = urlparse.urlparse(base)
-        new = urlparse.urlparse(self.absolute)
+        base = urllib.parse.urlparse(base)
+        new = urllib.parse.urlparse(self.absolute)
 
         if base.scheme != new.scheme or base.netloc != new.netloc:
             return self.absolute
@@ -156,5 +157,5 @@ class URL(str):
         new_path = (['..'] * len(base_path)) + new_path
         new_path = '/'.join(new_path)
 
-        return urlparse.urlunparse(("", "", new_path,
+        return urllib.parse.urlunparse(("", "", new_path,
                                     new.params, new.query, new.fragment))
