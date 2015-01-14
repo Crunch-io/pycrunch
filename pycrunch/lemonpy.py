@@ -1,5 +1,8 @@
+from __future__ import division
+
 import logging
-import urlparse
+
+from six.moves import urllib
 
 import requests
 
@@ -68,7 +71,7 @@ class ResponseHandler(object):
             return handler(r)
 
         # If that fails, look for a Nxx code
-        handler = getattr(self, "status_%dxx" % (code / 100), None)
+        handler = getattr(self, "status_%dxx" % (code // 100), None)
         if handler is not None:
             return handler(r)
 
@@ -85,11 +88,8 @@ class ResponseHandler(object):
         have to examine the Response directly to determine its payload.
         """
         ct = r.headers.get("Content-Type").split(";", 1)[0]
-        parser = self.parsers.get(ct, None)
-        if parser is None:
-            r.payload = None
-        else:
-            r.payload = parser(self.session, r)
+        parser = self.parsers.get(ct)
+        r.payload = parser(self.session, r) if parser else None
 
     def status_2xx(self, r):
         self.parse_payload(r)
@@ -129,7 +129,7 @@ class URL(str):
         return str.__new__(cls, value)
 
     def __init__(self, value, base):
-        base, frag = urlparse.urldefrag(base)
+        base, frag = urllib.parse.urldefrag(base)
         self.base = base
 
     @property
@@ -139,8 +139,8 @@ class URL(str):
 
     def relative_to(self, base):
         """Return self, relative to the given absolute base."""
-        base = urlparse.urlparse(base)
-        new = urlparse.urlparse(self.absolute)
+        base = urllib.parse.urlparse(base)
+        new = urllib.parse.urlparse(self.absolute)
 
         if base.scheme != new.scheme or base.netloc != new.netloc:
             return self.absolute
@@ -156,5 +156,5 @@ class URL(str):
         new_path = (['..'] * len(base_path)) + new_path
         new_path = '/'.join(new_path)
 
-        return urlparse.urlunparse(("", "", new_path,
+        return urllib.parse.urlunparse(("", "", new_path,
                                     new.params, new.query, new.fragment))

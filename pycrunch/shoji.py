@@ -6,6 +6,8 @@ for the latest Shoji specification.
 
 import json
 
+import six
+
 from pycrunch import elements
 from pycrunch.lemonpy import URL
 
@@ -66,7 +68,7 @@ class Index(elements.JSONObject):
         members = dict(
             (URL(entity_url, catalog_url),
              None if tup is None else Tuple(session, entity_url, **tup))
-            for entity_url, tup in members.iteritems()
+            for entity_url, tup in six.iteritems(members)
         )
         super(Index, self).__init__(**members)
 

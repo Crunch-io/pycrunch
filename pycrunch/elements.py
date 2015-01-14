@@ -23,6 +23,8 @@ being parsed into an instance of Foo, rather than a bare JSONObject.
 
 import json
 
+import six
+
 from pycrunch import lemonpy
 
 omitted = object()
@@ -72,10 +74,9 @@ class ElementMeta(type):
         return new_type
 
 
+@six.add_metaclass(ElementMeta)
 class Element(JSONObject):
     """A base class for JSON objects classified by an 'element' member."""
-
-    __metaclass__ = ElementMeta
 
     def __init__(__this__, session, **members):
         __this__.session = session
@@ -93,7 +94,10 @@ elements = {}
 def parse_element(session, j):
     """Recursively replace dict with appropriate subclasses of JSONObjects."""
     if isinstance(j, dict):
-        j = dict((k, parse_element(session, v)) for k, v in j.iteritems())
+        j = dict(
+            (k, parse_element(session, v))
+            for k, v in six.iteritems(j)
+        )
 
         elem = j.get("element", None)
         if elem in elements:
@@ -149,21 +153,21 @@ class Document(Element):
     def post(self, data, *args, **kwargs):
         kwargs.setdefault('headers', {})
         kwargs["headers"].setdefault("Content-Type", "application/json")
-        if not isinstance(data, basestring):
+        if not isinstance(data, six.string_types):
             data = json.dumps(data)
         return self.session.post(self.self, data, *args, **kwargs)
 
     def put(self, data, *args, **kwargs):
         kwargs.setdefault('headers', {})
         kwargs["headers"].setdefault("Content-Type", "application/json")
-        if not isinstance(data, basestring):
+        if not isinstance(data, six.string_types):
             data = json.dumps(data)
         return self.session.put(self.self, data, *args, **kwargs)
 
     def patch(self, data, *args, **kwargs):
         kwargs.setdefault('headers', {})
         kwargs["headers"].setdefault("Content-Type", "application/json")
-        if not isinstance(data, basestring):
+        if not isinstance(data, six.string_types):
             data = json.dumps(data)
         return self.session.patch(self.self, data, *args, **kwargs)
 

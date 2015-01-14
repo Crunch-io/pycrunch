@@ -2,21 +2,27 @@
 # coding: utf-8
 
 import os
+import io
+
 thisdir = os.path.abspath(os.path.dirname(__file__))
 
 from setuptools import setup, find_packages
 
-version = open(os.path.join(thisdir, 'version.txt'), 'rb').read().strip()
+version_fn = os.path.join(thisdir, 'version.txt')
+with io.open(version_fn, encoding='utf-8') as f:
+    version = f.read().strip()
 
 
 def get_long_desc():
     root_dir = os.path.dirname(__file__)
     if not root_dir:
         root_dir = '.'
-    return open(os.path.join(root_dir, 'README.md')).read()
+    readme_fn = os.path.join(root_dir, 'README.md')
+    with io.open(readme_fn, encoding='utf-8') as stream:
+        return stream.read()
 
 
-setup(
+setup_params = dict(
     name='pycrunch',
     version=version,
     description="Crunch.io Client Library",
@@ -33,6 +39,7 @@ setup(
     license='LGPL',
     install_requires=[
         'requests>=2.3.0',
+        'six',
     ],
     tests_require=[
         'nose>=1.1.2',
@@ -46,3 +53,6 @@ setup(
     zip_safe=True,
     entry_points={},
 )
+
+if __name__ == '__main__':
+    setup(**setup_params)
