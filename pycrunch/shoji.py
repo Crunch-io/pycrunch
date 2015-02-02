@@ -77,7 +77,7 @@ class Catalog(elements.Document):
     """A Shoji Catalog."""
 
     element = "shoji:catalog"
-    navigation_collections = ("catalogs", "views", "urls")
+    navigation_collections = ("catalogs", "orders", "views", "urls")
 
     def __init__(__this__, session, **members):
         if 'index' in members:
@@ -204,3 +204,19 @@ class View(elements.Document):
         """Update the View with the new value."""
         self['value'] = newvalue
         super(View, self).put(data=self.json)
+
+
+class Order(elements.Document):
+
+    element = "shoji:order"
+    navigation_collections = ()
+
+    @property
+    def graph(self):
+        return self['graph']
+
+    @graph.setter
+    def graph(self, newgraph):
+        """Update the Order with the new graph."""
+        self['graph'] = newgraph
+        super(Order, self).put(data=self.json)
