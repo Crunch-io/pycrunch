@@ -5,7 +5,7 @@ Python dicts, lists, etc. This module does the same, but wherever the base
 parser would return a dict, it replaces that with a JSONObject instance.
 JSONObject is itself a subclass of dict, so all the dict attributes and
 methods are still present; however, the JSONObject has a .json property
-and a nicer repr/str output. It also allows reading keys as if they were
+and a nicer str output. It also allows reading keys as if they were
 attributes, so instead of foo['bar'][0]['baz'] you can write foo.bar[0].baz.
 
 When a JSON object has an "element" member, however, a specialized subclass
@@ -36,11 +36,6 @@ class JSONObject(dict):
     @property
     def json(self):
         return json.dumps(self, indent=4)
-
-    def __repr__(self):
-        return "%s.%s(**%s)" % (self.__module__, self.__class__.__name__,
-                                # __repr__ is not indented!
-                                json.dumps(self))
 
     def __str__(self):
         return "%s.%s(**%s)" % (self.__module__, self.__class__.__name__,
@@ -135,10 +130,25 @@ class Document(Element):
         for collname in self.navigation_collections:
             coll = self.get(collname, {})
             if key in coll:
-                return self.session.get(coll[key]).payload
+                url = coll[key]
+                return self.session.get(url).payload
 
         raise AttributeError(
             "%s has no attribute %s" % (self.__class__.__name__, key))
+
+    def follow(self, key, qs=None):
+        """GET the payload of the requested collection URL."""
+        for collname in self.navigation_collections:
+            coll = self.get(collname, {})
+            if key in coll:
+                url = coll[key]
+                if qs is not None:
+                    # Remove any existing qs, such as for URI Templates.
+                    url = url.rsplit("?", 1)[0] + "?" + qs
+                return self.session.get(url).payload
+
+        raise AttributeError(
+            "%s has no link %s" % (self.__class__.__name__, key))
 
     def refresh(self):
         """GET self.self, update self with its payload and return self."""
