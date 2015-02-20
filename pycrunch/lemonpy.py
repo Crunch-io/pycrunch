@@ -19,8 +19,11 @@ class LemonPyError(Exception):
 class ClientError(LemonPyError):
 
     def __init__(self, response):
-        super(ClientError, self).__init__(response, response.request.url,
-                                          response.payload)
+        args = []
+        if not isinstance(response, basestring):
+            args = [response.request.url, response.payload]
+
+        super(ClientError, self).__init__(response, *args)
 
     @property
     def status_code(self):
@@ -34,8 +37,10 @@ class ClientError(LemonPyError):
 class ServerError(LemonPyError):
 
     def __init__(self, response):
-        super(ServerError, self).__init__(response, response.request.url,
-                                          response.payload)
+        args = []
+        if not isinstance(response, basestring):
+            args = [response.request.url, response.payload]
+        super(ServerError, self).__init__(response, *args)
 
 
 class ResponseHandler(object):
