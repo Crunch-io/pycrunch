@@ -65,12 +65,18 @@ class Index(elements.JSONObject):
     def __init__(self, session, catalog_url, **members):
         self.session = session
         self.catalog_url = catalog_url
-        members = dict(
-            (URL(entity_url, catalog_url),
-             None if tup is None else Tuple(session, entity_url, **tup))
-            for entity_url, tup in six.iteritems(members)
-        )
-        super(Index, self).__init__(**members)
+        new_members = {}
+        for entity_url, tup in six.iteritems(members):
+            url = entity_url
+            if not isinstance(url, URL):
+                url = URL(url, catalog_url.absolute)
+
+            if tup is None:
+                new_members[entity_url] = None
+            else:
+                new_members[entity_url] = Tuple(session, url, **tup)
+
+        super(Index, self).__init__(**new_members)
 
 
 class Catalog(elements.Document):
@@ -80,8 +86,11 @@ class Catalog(elements.Document):
     navigation_collections = ("catalogs", "orders", "views", "urls")
 
     def __init__(__this__, session, **members):
-        if 'index' in members:
-            members['index'] = Index(session, members['self'], **members['index'])
+        if 'self' in members:
+            if not isinstance(members['self'], URL):
+                members['self'] = URL(members['self'], "")
+            if 'index' in members:
+                members['index'] = Index(session, members['self'], **members['index'])
         super(Catalog, __this__).__init__(session, **members)
 
     def create(self, entity=None, refresh=None):
@@ -179,6 +188,8 @@ class Entity(elements.Document):
     def __init__(__this__, session, **members):
         members.setdefault("body", {})
         if 'self' in members:
+            if not isinstance(members['self'], URL):
+                members['self'] = URL(members['self'], "")
             members['body'] = Tuple(session, members['self'], **members['body'])
         super(Entity, __this__).__init__(session, **members)
 
@@ -195,6 +206,11 @@ class View(elements.Document):
     element = "shoji:view"
     navigation_collections = ("views", "urls")
 
+    def __init__(__this__, session, **members):
+        if 'self' in members and not isinstance(members['self'], URL):
+            members['self'] = URL(members['self'], "")
+        super(View, __this__).__init__(session, **members)
+
     @property
     def value(self):
         return self['value']
@@ -210,6 +226,11 @@ class Order(elements.Document):
 
     element = "shoji:order"
     navigation_collections = ()
+
+    def __init__(__this__, session, **members):
+        if 'self' in members and not isinstance(members['self'], URL):
+            members['self'] = URL(members['self'], "")
+        super(Order, __this__).__init__(session, **members)
 
     @property
     def graph(self):
