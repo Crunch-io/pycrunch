@@ -5,7 +5,8 @@ import io
 
 import six
 
-from pycrunch import shoji
+from . import shoji
+from . import csv
 
 
 class Importer(object):
@@ -153,3 +154,27 @@ def place(dataset, key, ids, data):
         },
         "data": data
     })
+
+
+def post_rows(ds, rows):
+    """
+    POST the rows to the ds batches. Rows should be an iterable
+    of lists of cells.
+    """
+    gen = csv.NoneAsEmptyLineGenerator()
+    lines = six.moves.map(gen.as_csv, rows)
+    return post_lines(ds, lines)
+
+
+def post_lines(ds, lines):
+    """
+    POST the CSV lines to the ds batches. Lines should be an
+    iterable of text CSV lines.
+    """
+    encoded = (line.encode('utf-8') for line in lines)
+    data = b''.join(encoded)
+    content_type = 'application/csv'
+    filename = 'content.csv'
+    file = filename, data, content_type
+    files = dict(file=file)
+    ds.session.post(ds.batches.self, files=files)
