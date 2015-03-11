@@ -19,7 +19,7 @@ class CSVLineGenerator:
     ...     (3, None, "foo"),
     ...     (4, "", "bar"),
     ... ]
-    >>> out = six.moves.map(gen.as_csv, rows)
+    >>> out = gen.process(rows)
     >>> next(out)
     '"id","val","val2"\n'
     >>> next(out)
@@ -44,6 +44,9 @@ class CSVLineGenerator:
     def write(self, line):
         self.last_write = line
 
+    def process(self, rows):
+        return six.moves.map(self.as_csv, rows)
+
 
 class NoneAsEmptyLineGenerator(CSVLineGenerator):
     r"""
@@ -59,7 +62,7 @@ class NoneAsEmptyLineGenerator(CSVLineGenerator):
     ...     (3, None, "foo"),
     ...     (4, "", "bar"),
     ... ]
-    >>> out = six.moves.map(gen.as_csv, rows)
+    >>> out = gen.process(rows)
     >>> next(out)
     '"id","val","val2"\n'
     >>> next(out)
