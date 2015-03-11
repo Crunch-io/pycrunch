@@ -162,8 +162,7 @@ def post_rows(ds, rows):
     of lists of cells.
     """
     gen = csv.NoneAsEmptyLineGenerator()
-    lines = six.moves.map(gen.as_csv, rows)
-    return post_lines(ds, lines)
+    return post_lines(ds, gen.process(rows))
 
 
 def post_lines(ds, lines):
