@@ -6,7 +6,7 @@ import csv
 import six
 
 
-class CSVLineGenerator:
+class CSVLineGenerator(object):
     r"""
     Apply csv writer .write operations to individual rows.
 
