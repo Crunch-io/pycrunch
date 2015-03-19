@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+
 import six
 
 from pycrunch import csvlib
@@ -7,7 +9,7 @@ from pycrunch import csvlib
 class TestCSV:
 	def test_unicode_values(self):
 		"CSV rendering should handle simple unicode"
-		rows = [[u'☃']]
+		rows = [['☃']]
 		csvlib.rows_as_csv_file(rows)
 
 	def test_result_is_binary(self):
