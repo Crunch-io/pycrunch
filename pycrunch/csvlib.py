@@ -26,7 +26,8 @@ def rows_as_csv_file(rows, none_as_no_data=True):
 
         writer = csv.writer(pipe, quoting=csv.QUOTE_NONNUMERIC, lineterminator='\n')
         for row in rows:
-            writer.writerow([sentinel if cell is None else cell for cell in row])
+            row = [sentinel if cell is None else cell for cell in row]
+            writer.writerow(row)
     else:
         writer = csv.writer(out, quoting=csv.QUOTE_NONNUMERIC, lineterminator='\n')
         for row in rows:
