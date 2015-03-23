@@ -14,18 +14,17 @@ def rows_as_csv_file(rows):
     # and a .read() of it (like requests.post will do) does not make a copy.
     out = six.BytesIO()
 
-    if True:
-        sentinel = "__CSV_SENTINEL_NONE__"
+    sentinel = "__CSV_SENTINEL_NONE__"
 
-        class EphemeralWriter():
-            def write(self, line):
-                line = line.replace('"' + sentinel + '"', "")
-                out.write(line.encode('utf-8'))
-        pipe = EphemeralWriter()
+    class EphemeralWriter():
+        def write(self, line):
+            line = line.replace('"' + sentinel + '"', "")
+            out.write(line.encode('utf-8'))
+    pipe = EphemeralWriter()
 
-        writer = csv.writer(pipe, quoting=csv.QUOTE_NONNUMERIC, lineterminator='\n')
-        for row in rows:
-            writer.writerow([sentinel if cell is None else cell for cell in row])
+    writer = csv.writer(pipe, quoting=csv.QUOTE_NONNUMERIC, lineterminator='\n')
+    for row in rows:
+        writer.writerow([sentinel if cell is None else cell for cell in row])
 
     out.seek(0)
 
