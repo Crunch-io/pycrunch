@@ -45,7 +45,6 @@ setup_params = dict(
         'six',
     ],
     tests_require=[
-        'nose>=1.1.2',
         'pytest',
     ],
     setup_requires=[
