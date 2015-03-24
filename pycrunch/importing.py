@@ -105,7 +105,7 @@ class Importer(object):
     def create_batch_from_rows(self, ds, rows):
         """Send rows of Python values as efficiently as possible.
         """
-        f = csvlib.rows.as_csv_file(rows)
+        f = csvlib.rows_as_csv_file(rows)
         return self.create_batch_from_csv_file(ds, f)
 
     def create_batch_from_csv_file(self, ds, csv_file):
