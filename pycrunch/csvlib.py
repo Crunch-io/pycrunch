@@ -45,6 +45,9 @@ def rows_as_csv_file_clean(rows):
     Duplicate of rows_as_csv_file except
     None values are emitted
     normally by the Python csv library, which means as (quoted) empty strings.
+    Use this function if the rows contain no None values or
+    if None values are only used for "text" types and the empty
+    string is a suitable representation for those values.
     """
     # Write to a BytesIO because it joins encoded lines as we go
     # and a .read() of it (like requests.post will do) does not make a copy.
