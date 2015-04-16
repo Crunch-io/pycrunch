@@ -5,7 +5,7 @@ import io
 
 import six
 
-from pycrunch import csvlib, shoji
+from pycrunch import shoji
 
 
 class Importer(object):
@@ -19,7 +19,10 @@ class Importer(object):
         self.backoff_max = backoff_max
 
     def wait_for_batch_status(self, batch, status):
-        """Wait for the given status and return the batch. Error if not reached."""
+        """Wait for the given status(es) and return the batch. Error if not reached."""
+        if isinstance(status, six.string_types):
+            status = [status]
+
         for trial in range(self.retries):
             new_batch = batch.session.get(batch.self).payload
             st = new_batch.body['status']
@@ -27,7 +30,7 @@ class Importer(object):
                 raise ValueError("The batch was not fully appended.")
             elif st == 'conflict':
                 raise ValueError("The batch had conflicts.")
-            elif st == status:
+            elif st in status:
                 return new_batch
             else:
                 time.sleep(self.frequency)
@@ -89,18 +92,18 @@ class Importer(object):
 
         if async:
             # Wait for the batch to be ready...
-            self.wait_for_batch_status(batch, 'ready')
+            batch = self.wait_for_batch_status(batch, ['ready', 'imported'])
+            if batch.body.status == 'ready':
+                # Old 2-stage behavior: Tell the batch to start appending.
+                batch_part = shoji.Entity(batch.session, body={'status': 'importing'})
+                batch.patch(data=batch_part.json)
 
-        # Tell the batch to start appending.
-        batch_part = shoji.Entity(batch.session, body={'status': 'importing'})
-        batch.patch(data=batch_part.json)
-
-        # Wait for the batch to be imported...
-        if async:
-            return self.wait_for_batch_status(batch, 'imported')
+                # Wait for the batch to be imported...
+                batch = self.wait_for_batch_status(batch, 'imported')
         else:
             batch.refresh()
-            return batch
+
+        return batch
 
     def create_batch_from_csv_file(self, ds, csv_file):
         """Create and return a Batch from the given CSV string or open file.
