@@ -94,7 +94,7 @@ class Importer(object):
             # Wait for the batch to be ready...
             batch = self.wait_for_batch_status(batch, ['ready', 'imported'])
             if batch.body.status == 'ready':
-                # Old 2-stage behavior: Tell the batch to start appending.
+                # Two-stage behavior: Tell the batch to start appending.
                 batch_part = shoji.Entity(batch.session, body={'status': 'importing'})
                 batch.patch(data=batch_part.json)
 
@@ -105,14 +105,15 @@ class Importer(object):
 
         return batch
 
-    def create_batch_from_rows(self, ds, rows):
-        """Send rows of Python values as efficiently as possible.
-        """
-        f = csvlib.rows_as_csv_file(rows)
-        return self.create_batch_from_csv_file(ds, f)
-
     def create_batch_from_csv_file(self, ds, csv_file):
         """Create and return a Batch from the given CSV string or open file.
+
+        This is commonly combined with csvlib to send rows of Python values
+        as efficiently as possible:
+
+            >>> rows = get_my_row_iterator()
+            >>> f = csvlib.rows_as_csv_file(rows)
+            >>> importer.create_batch_from_csv_file(ds, f)
         """
         ds.session.post(
             ds.batches.self,
