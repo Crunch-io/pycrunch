@@ -102,6 +102,11 @@ class Importer(object):
                 batch = self.wait_for_batch_status(batch, 'imported')
         else:
             batch.refresh()
+            if batch.body.status == 'ready':
+                # Two-stage behavior: Tell the batch to start appending.
+                batch_part = shoji.Entity(batch.session, body={'status': 'importing'})
+                batch.patch(data=batch_part.json)
+                batch.refresh()
 
         return batch
 
