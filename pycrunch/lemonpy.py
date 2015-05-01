@@ -121,11 +121,84 @@ class Session(requests.Session):
 
     headers = {}
     handler_class = ResponseHandler
+    content_encoding = None
+    """If "gzip", then gzip any request body with Content-Encoding: gzip."""
 
     def __init__(self):
         super(Session, self).__init__()
         self.headers = self.__class__.headers
         self.hooks["response"] = self.handler_class(self)
+
+    def prepare_request(self, request):
+        p = super(Session, self).prepare_request(request)
+        if self.content_encoding == "gzip":
+            if p.body and isinstance(p.body, six.string_types):
+                # Replace body with a generator
+                p.body = Gzip(p.body).generate()
+
+                p.headers['Content-Encoding'] = 'gzip'
+                if 'Content-Length' in p.headers:
+                    del p.headers['Content-Length']
+                p.headers['Transfer-Encoding'] = 'chunked'
+
+        return p
+
+
+class Gzip(object):
+    """An iterable object to hand to requests.post that gzips the given data.
+
+    The 'data' argument must be a string-like object that is sliceable.
+    """
+
+    compress_level = 5
+    READ_CHUNK_SIZE = 8192
+
+    def __init__(self, data):
+        self.data = data
+
+    def generate(self):
+        """Compress 'data' at self.compress_level."""
+        import struct
+        import time
+        import zlib
+
+        # See http://www.gzip.org/zlib/rfc-gzip.html
+        header = six.b(
+            '\x1f\x8b'       # ID1 and ID2: gzip marker
+            '\x08'           # CM: compression method
+            '\x00'           # FLG: none set
+        )
+        # MTIME: 4 bytes
+        header += struct.pack("<L", int(time.time()) & int('FFFFFFFF', 16))
+        header += six.b(
+            '\x02'           # XFL: max compression, slowest algo
+            '\xff'           # OS: unknown
+        )
+
+        crc = zlib.crc32(six.b(""))
+        size = 0
+        zobj = zlib.compressobj(self.compress_level,
+                                zlib.DEFLATED, -zlib.MAX_WBITS,
+                                zlib.DEF_MEM_LEVEL, 0)
+
+        yield header
+
+        while size < len(self.data):
+            chunk = self.data[size:size + self.READ_CHUNK_SIZE]
+            size += len(chunk)
+
+            crc = zlib.crc32(chunk, crc)
+            output = zobj.compress(chunk)
+            if output:
+                yield output
+
+        output = zobj.flush()
+        if output:
+            yield output
+
+        footer = struct.pack("<L", crc & int('FFFFFFFF', 16))   # CRC32: 4 bytes
+        footer += struct.pack("<L", size & int('FFFFFFFF', 16))  # ISIZE: 4 bytes
+        yield footer
 
 
 class URL(str):
@@ -162,5 +235,6 @@ class URL(str):
         new_path = (['..'] * len(base_path)) + new_path
         new_path = '/'.join(new_path)
 
-        return urllib.parse.urlunparse(("", "", new_path,
-                                    new.params, new.query, new.fragment))
+        return urllib.parse.urlunparse(
+            ("", "", new_path, new.params, new.query, new.fragment)
+        )
