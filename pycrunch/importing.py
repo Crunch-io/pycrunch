@@ -5,7 +5,7 @@ import io
 
 import six
 
-from pycrunch import shoji
+from pycrunch import shoji, csvlib
 
 
 class Importer(object):
