@@ -18,7 +18,7 @@ class TestCSV:
 	def test_result_is_binary(self):
 		"Result should be a stream with a binary type"
 		res = csvlib.rows_as_csv_file([['foo']])
-		assert isinstance(res.getvalue(), six.binary_type)
+		assert isinstance(next(res), six.binary_type)
 
 	def test_stdlib_unicode(self):
 		"""
