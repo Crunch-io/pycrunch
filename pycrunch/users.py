@@ -29,6 +29,14 @@ To grant or permissions you want that user to have on your dataset:
         dataset_permissions={'view': True, 'edit': True}
     )
 
+To grant to several users at once:
+
+>>> myds.permissions.edit_index({
+        user1.entity_url: {"dataset_permissions": {'view': True, 'edit': True}},
+        user2.entity_url: {"dataset_permissions": {'view': True}},
+        user3.entity_url: {"dataset_permissions": {'view': True}},
+    })
+
 The requesting user must have the 'add_users' and/or 'change_permissions'
 permissions as necessary.
 
