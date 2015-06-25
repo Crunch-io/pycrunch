@@ -5,7 +5,8 @@ def series_from_variable(value, metadata):
     value = [None if (isinstance(item, dict) and item.keys() == ['?']) else item for item in value]
 
     type_ = metadata.type
-    if type == 'categorical':
+
+    if type_ == 'categorical':
         cats = {cat['id']:cat['name'] for cat in metadata['categories']}
         value = [None if val is None else cats[val] for val in value]
         return Categorical(value,
