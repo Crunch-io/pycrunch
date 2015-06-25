@@ -8,11 +8,12 @@ def clean_item(item):
     except (TypeError, KeyError):
         return item
 
+
 def clean_value(k, v, metadata=None):
     return [clean_item(item) for item in v]
 
-def dataframe_from_dataset(site, dataset_name_or_id):
 
+def dataframe_from_dataset(site, dataset_name_or_id):
     try:
         dataset = site.datasets.by('name')[dataset_name_or_id]
     except KeyError:
