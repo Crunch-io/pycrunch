@@ -236,7 +236,9 @@ class ElementSession(lemonpy.Session):
     headers = {}
     handler_class = ElementResponseHandler
 
-    def __init__(self, email, password):
-        super(ElementSession, self).__init__()
+    def __init__(self, email=None, password=None, token=None, domain=None):
         self.email = email
         self.password = password
+        self.token = token
+        self.domain = domain
+        super(ElementSession, self).__init__()
