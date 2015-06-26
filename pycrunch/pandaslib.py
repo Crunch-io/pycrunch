@@ -34,7 +34,7 @@ def dataframe_from_dataset(site, dataset_name_or_id, variables=None):
 
         for name, value in t.data.iteritems():
             metadata = t.metadata[name]
-            data[metadata.name] = series_from_variable(value, metadata)
+            data[metadata.alias] = series_from_variable(value, metadata)
 
     else:
         if not isinstance(variables, list):
@@ -47,6 +47,6 @@ def dataframe_from_dataset(site, dataset_name_or_id, variables=None):
                 raise KeyError('No variable with name: %s' % variable)
             metadata = t.body
             value = t.values_url.value
-            data[metadata.name] = series_from_variable(value, metadata)
+            data[metadata.alias] = series_from_variable(value, metadata)
 
     return DataFrame(data)

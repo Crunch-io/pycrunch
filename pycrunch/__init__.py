@@ -142,6 +142,8 @@ You typically add new resources to a Catalog via its `create` method:
     })
 """
 
+import urlparse
+
 from pycrunch import cubes
 from pycrunch import elements
 from pycrunch import shoji
@@ -157,7 +159,8 @@ __all__ = [
     'importing',
     'ClientError', 'ServerError', 'CrunchError'
     'Session',
-    'urljoin'
+    'urljoin',
+    'connect', 'connect_with_token'
 ]
 
 
@@ -169,3 +172,14 @@ class CrunchError(elements.Element):
 class CrunchTable(elements.Document):
 
     element = "crunch:table"
+
+
+def connect(user, pw, site_url="https://us.crunch.io/api/"):
+    return Session(user, pw).get(site_url).payload
+
+
+def connect_with_token(token, site_url="https://us.crunch.io/api/"):
+    return Session(
+        token=token,
+        domain=urlparse.urlparse(site_url).netloc
+    ).get(site_url).payload
