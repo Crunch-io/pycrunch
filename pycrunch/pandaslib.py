@@ -31,12 +31,14 @@ def dataframe_from_dataset(site, dataset_name_or_id, variables=None):
     if variables is None:
 
         t = dataset.entity.table
+        metadata = t.metadata
 
         for name, value in t.data.iteritems():
-            metadata = t.metadata[name]
-            data[metadata.alias] = series_from_variable(value, metadata)
+            vardef = t.metadata[name]
+            data[vardef.alias] = series_from_variable(value, vardef)
 
     else:
+        metadata = {}
         if not isinstance(variables, list):
             variables = list(variables)
 
@@ -45,8 +47,15 @@ def dataframe_from_dataset(site, dataset_name_or_id, variables=None):
                 t = dataset.entity.variables.by('name')[variable].entity
             except KeyError:
                 raise KeyError('No variable with name: %s' % variable)
-            metadata = t.body
+            vardef = t.body
             value = t.values_url.value
-            data[metadata.alias] = series_from_variable(value, metadata)
+            data[vardef.alias] = series_from_variable(value, vardef)
+            metadata[vardef.id] = vardef
 
-    return DataFrame(data)
+    df = DataFrame(data)
+
+    # Attach the crunch:table metadata object to the df
+    # so consumers can have both.
+    df.metadata = metadata
+
+    return df
