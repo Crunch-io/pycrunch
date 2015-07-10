@@ -1,52 +1,82 @@
 from pandas import DataFrame, Categorical, Series, to_datetime
 
 
-def series_from_variable(value, metadata):
-    value = [None if (isinstance(item, dict) and item.keys() == ['?']) else item for item in value]
+def series_from_variable(col, vardef):
+    """Return the given Crunch column and variable def as a Pandas Series."""
+    col = [None if (isinstance(item, dict) and item.keys() == ['?']) else item
+           for item in col]
 
-    type_ = metadata.type
+    if vardef.type == 'categorical':
+        cats = dict((c['id'], c['name']) for c in vardef['categories'])
+        col = [None if val is None else cats[val] for val in col]
+        return Categorical(
+            col,
+            categories=[cat['name'] for cat in vardef['categories']
+                        if not cat['missing']],
+            ordered=True
+        )
+    elif vardef.type == 'datetime':
+        return to_datetime(Series(col))
 
-    if type_ == 'categorical':
-        cats = {cat['id']:cat['name'] for cat in metadata['categories']}
-        value = [None if val is None else cats[val] for val in value]
-        return Categorical(value,
-                           categories=[cat['name'] for cat in metadata['categories'] if not cat['missing']],
-                           ordered=True)
+    return Series(col)
 
-    if type_ == 'datetime':
-        return to_datetime(Series(value))
 
-    return Series(value)
+ROWCHUNKSIZE = 1000
 
 
 def dataframe_from_dataset(site, dataset_name_or_id, variables=None):
+    """Return a Pandas DataFrame for the given Crunch Dataset name or id.
 
+    If the 'variables' argument is given and not None, it should be a
+    single variable alias, or a list of such, in which case only those
+    variables will be included in the DataFrame. If omitted or None,
+    all variables are included.
+
+    The returned DataFrame has an extra "metadata" attribute on it:
+    a dict of Crunch variable definitions for each Series (keyed by id).
+    """
+    ds_catalog = site.datasets
     try:
-        dataset = site.datasets.by('name')[dataset_name_or_id]
+        dataset = ds_catalog.by('name')[dataset_name_or_id].entity
     except KeyError:
-        dataset = site.datasets.by('id')[dataset_name_or_id]
+        dataset = ds_catalog.by('id')[dataset_name_or_id].entity
 
     data = {}
 
     if variables is None:
+        numrows = dataset.summary.value.unweighted.total
+        seenrows = 0
+        all_data = {}
+        while True:
+            t = site.session.get(
+                "%s?offset=%d&limit=%d" %
+                (dataset.urls['table_url'], seenrows, ROWCHUNKSIZE)
+            ).payload
+            for name, value in t.data.iteritems():
+                if name not in all_data:
+                    all_data[name] = []
+                all_data[name].extend(value)
+            seenrows += ROWCHUNKSIZE
+            if seenrows > numrows:
+                break
 
-        t = dataset.entity.table
         metadata = t.metadata
 
-        for name, value in t.data.iteritems():
-            vardef = t.metadata[name]
-            data[vardef.alias] = series_from_variable(value, vardef)
-
+        # Convert to Series
+        for varid, col in all_data.iteritems():
+            vardef = t.metadata[varid]
+            data[vardef.alias] = series_from_variable(col, vardef)
     else:
         metadata = {}
         if not isinstance(variables, list):
             variables = list(variables)
 
+        var_catalog = dataset.variables
         for variable in variables:
             try:
-                t = dataset.entity.variables.by('name')[variable].entity
+                t = var_catalog.by('alias')[variable].entity
             except KeyError:
-                raise KeyError('No variable with name: %s' % variable)
+                raise KeyError('No variable with alias: %s' % variable)
             vardef = t.body
             value = t.values_url.value
             data[vardef.alias] = series_from_variable(value, vardef)

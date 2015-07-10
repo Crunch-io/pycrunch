@@ -175,10 +175,12 @@ class CrunchTable(elements.Document):
 
 
 def connect(user, pw, site_url="https://us.crunch.io/api/"):
+    """Log in to Crunch with a user/pw; return the top-level Site payload."""
     return Session(user, pw).get(site_url).payload
 
 
 def connect_with_token(token, site_url="https://us.crunch.io/api/"):
+    """Log in to Crunch with a token; return the top-level Site payload."""
     return Session(
         token=token,
         domain=urlparse.urlparse(site_url).netloc
