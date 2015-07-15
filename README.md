@@ -23,8 +23,8 @@ Start a simple site session via:
 
 Or, if you have a crunch access token:
 
-   >>> import pycrunch
-   >>> site = pycrunch.connect_with_token("DFIJFIJWIEJIJFKSJLKKDJKFJSLLSLSL", "https://beta.crunch.io/api/")
+    >>> import pycrunch
+    >>> site = pycrunch.connect_with_token("DFIJFIJWIEJIJFKSJLKKDJKFJSLLSLSL", "https://beta.crunch.io/api/")
 
 Then, you can browse the site. Use `print` to pretty-indent JSON payloads:
 
