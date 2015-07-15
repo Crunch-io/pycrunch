@@ -1,3 +1,4 @@
+import six
 from pandas import DataFrame, Categorical, Series, to_datetime
 
 
@@ -52,7 +53,7 @@ def dataframe_from_dataset(site, dataset_name_or_id, variables=None):
                 "%s?offset=%d&limit=%d" %
                 (dataset.urls['table_url'], seenrows, ROWCHUNKSIZE)
             ).payload
-            for name, value in t.data.iteritems():
+            for name, value in six.iteritems(t.data):
                 if name not in all_data:
                     all_data[name] = []
                 all_data[name].extend(value)
@@ -63,7 +64,7 @@ def dataframe_from_dataset(site, dataset_name_or_id, variables=None):
         metadata = t.metadata
 
         # Convert to Series
-        for varid, col in all_data.iteritems():
+        for varid, col in six.iteritems(all_data):
             vardef = t.metadata[varid]
             data[vardef.alias] = series_from_variable(col, vardef)
     else:

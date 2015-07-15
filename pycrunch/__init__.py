@@ -142,7 +142,7 @@ You typically add new resources to a Catalog via its `create` method:
     })
 """
 
-import urlparse
+from six.moves import urllib
 
 from pycrunch import cubes
 from pycrunch import elements
@@ -183,5 +183,5 @@ def connect_with_token(token, site_url="https://us.crunch.io/api/"):
     """Log in to Crunch with a token; return the top-level Site payload."""
     return Session(
         token=token,
-        domain=urlparse.urlparse(site_url).netloc
+        domain=urllib.parse.urlparse(site_url).netloc
     ).get(site_url).payload
