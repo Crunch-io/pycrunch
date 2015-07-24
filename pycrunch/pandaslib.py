@@ -4,7 +4,7 @@ from pandas import DataFrame, Categorical, Series, to_datetime
 
 def series_from_variable(col, vardef):
     """Return the given Crunch column and variable def as a Pandas Series."""
-    col = [None if (isinstance(item, dict) and item.keys() == ['?']) else item
+    col = [None if (isinstance(item, dict) and list(item.keys()) == ['?']) else item
            for item in col]
 
     if vardef.type == 'categorical':
