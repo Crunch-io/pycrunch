@@ -25,8 +25,9 @@ def series_from_variable(col, vardef):
 ROWCHUNKSIZE = 1000
 
 
-def dataframe_from_dataset(site, dataset_name_or_id, variables=None):
-    """Return a Pandas DataFrame for the given Crunch Dataset name or id.
+def dataframe(dataset, variables=None):
+    """Return a Pandas DataFrame for the given Crunch Dataset Entity object.
+    Retrieve a dataset using pycrunch.get_dataset("dataset name or id").
 
     If the 'variables' argument is given and not None, it should be a
     single variable alias, or a list of such, in which case only those
@@ -36,12 +37,6 @@ def dataframe_from_dataset(site, dataset_name_or_id, variables=None):
     The returned DataFrame has an extra "metadata" attribute on it:
     a dict of Crunch variable definitions for each Series (keyed by id).
     """
-    ds_catalog = site.datasets
-    try:
-        dataset = ds_catalog.by('name')[dataset_name_or_id].entity
-    except KeyError:
-        dataset = ds_catalog.by('id')[dataset_name_or_id].entity
-
     data = {}
 
     if variables is None:
@@ -49,7 +44,7 @@ def dataframe_from_dataset(site, dataset_name_or_id, variables=None):
         seenrows = 0
         all_data = {}
         while True:
-            t = site.session.get(
+            t = dataset.session.get(
                 "%s?offset=%d&limit=%d" %
                 (dataset.urls['table_url'], seenrows, ROWCHUNKSIZE)
             ).payload
