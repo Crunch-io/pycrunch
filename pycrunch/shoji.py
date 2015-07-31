@@ -150,7 +150,7 @@ class Catalog(elements.Document):
         """
         return elements.JSONObject(**dict(
             (tupl[attr], tupl)
-            for tupl in self.index.itervalues()
+            for tupl in six.itervalues(self.index)
             if attr in tupl
         ))
 
