@@ -3,6 +3,7 @@
 
 import os
 import io
+import sys
 
 thisdir = os.path.abspath(os.path.dirname(__file__))
 
@@ -21,6 +22,8 @@ def get_long_desc():
     with io.open(readme_fn, encoding='utf-8') as stream:
         return stream.read()
 
+needs_pytest = {'pytest', 'test'}.intersection(sys.argv)
+pytest_runner = ['pytest_runner'] if needs_pytest else []
 
 setup_params = dict(
     name='pycrunch',
@@ -42,8 +45,10 @@ setup_params = dict(
         'six',
     ],
     tests_require=[
-        'nose>=1.1.2',
+        'pytest',
     ],
+    setup_requires=[
+    ] + pytest_runner,
     packages=find_packages(),
     namespace_packages=[],
     include_package_data=True,
