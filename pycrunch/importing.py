@@ -1,7 +1,7 @@
+import json
 import mimetypes
 import os
 import time
-import io
 
 import six
 
@@ -140,6 +140,26 @@ class Importer(object):
 
         source_url = self.add_source(ds, filename, open(path, 'rb'), mimetype)
         return self.create_batch_from_source(ds, source_url)
+
+    def stream_rows(self, ds, values):
+        """Send a data row (or list of rows) to the given dataset's stream.
+
+        The rows are added to the Dataset's stream resource. This does
+        *not* immediately append the rows to the Dataset; to do that,
+        call append_pending_stream periodically.
+
+        If the 'values' argument is a dict, it is treated as one row of
+        {variable_id: data value} pairs. The given data values must be
+        in the Crunch I/O format (for example, category ids instead
+        of names or numeric_values). Otherwise, the 'values' argument
+        must be an iterable of such dicts.
+        """
+        if isinstance(values, dict):
+            values = [values]
+        return ds.session.post(
+            ds.fragments.stream,
+            data="\n".join([json.dumps(row, indent=None) for row in values])
+        )
 
 
 importer = Importer()
