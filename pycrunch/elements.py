@@ -233,7 +233,9 @@ class ElementResponseHandler(lemonpy.ResponseHandler):
 
 class ElementSession(lemonpy.Session):
 
-    headers = {}
+    headers = {
+        "user-agent": "pycrunch"
+    }
     handler_class = ElementResponseHandler
 
     def __init__(self, email, password):
