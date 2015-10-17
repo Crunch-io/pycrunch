@@ -26,6 +26,7 @@ import json
 import six
 
 from pycrunch import lemonpy
+from pycrunch.version import version as pycrunch_version
 
 omitted = object()
 
@@ -234,7 +235,7 @@ class ElementResponseHandler(lemonpy.ResponseHandler):
 class ElementSession(lemonpy.Session):
 
     headers = {
-        "user-agent": "pycrunch"
+        "user-agent": "pycrunch/%s" % pycrunch_version
     }
     handler_class = ElementResponseHandler
 
