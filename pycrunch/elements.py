@@ -26,7 +26,7 @@ import json
 import six
 
 from pycrunch import lemonpy
-from version import __version__
+from .version import __version__
 
 omitted = object()
 
