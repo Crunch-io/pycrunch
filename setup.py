@@ -7,12 +7,9 @@ import sys
 
 thisdir = os.path.abspath(os.path.dirname(__file__))
 
+exec(compile(open(os.path.join(thisdir, 'pycrunch', 'version.py')).read(), 'version.py', 'exec'), globals(), locals())
+
 from setuptools import setup, find_packages
-
-version_fn = os.path.join(thisdir, 'version.txt')
-with io.open(version_fn, encoding='utf-8') as f:
-    version = f.read().strip()
-
 
 def get_long_desc():
     root_dir = os.path.dirname(__file__)
@@ -27,7 +24,7 @@ pytest_runner = ['pytest_runner'] if needs_pytest else []
 
 setup_params = dict(
     name='pycrunch',
-    version=version,
+    version=__version__,
     description="Crunch.io Client Library",
     long_description=get_long_desc(),
     url='https://github.com/Crunch-io/pycrunch',
