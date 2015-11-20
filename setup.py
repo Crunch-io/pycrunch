@@ -58,7 +58,7 @@ setup_params = dict(
         'pycrunch': ['*.json', '*.csv']
     },
     extras_require={
-        'pandas': 'pandas'
+        'pandas': ['pandas']
     },
     zip_safe=True,
     entry_points={},
