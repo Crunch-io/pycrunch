@@ -3,6 +3,7 @@
 *.py[cod]
 *.orig
 cr/lib/tests/datadir/
+venv/
 
 # C extensions
 *.so
