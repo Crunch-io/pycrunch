@@ -154,6 +154,7 @@ from pycrunch import elements
 from pycrunch import shoji
 from pycrunch import importing
 from pycrunch.lemonpy import ClientError, ServerError, urljoin
+from pycrunch.version import __version__
 
 Session = elements.ElementSession
 

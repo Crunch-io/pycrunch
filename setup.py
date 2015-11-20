@@ -3,15 +3,17 @@
 
 import os
 import io
+import re
+import sys
 
 thisdir = os.path.abspath(os.path.dirname(__file__))
 
+with open(os.path.join(thisdir, 'pycrunch', 'version.py')) as v_file:
+    VERSION = re.compile(
+        r".*__version__ = '(.*?)'",
+        re.S).match(v_file.read()).group(1)
+
 from setuptools import setup, find_packages
-
-version_fn = os.path.join(thisdir, 'version.txt')
-with io.open(version_fn, encoding='utf-8') as f:
-    version = f.read().strip()
-
 
 def get_long_desc():
     root_dir = os.path.dirname(__file__)
@@ -21,10 +23,12 @@ def get_long_desc():
     with io.open(readme_fn, encoding='utf-8') as stream:
         return stream.read()
 
+needs_pytest = {'pytest', 'test'}.intersection(sys.argv)
+pytest_runner = ['pytest_runner'] if needs_pytest else []
 
 setup_params = dict(
     name='pycrunch',
-    version=version,
+    version=VERSION,
     description="Crunch.io Client Library",
     long_description=get_long_desc(),
     url='https://github.com/Crunch-io/pycrunch',
@@ -42,8 +46,10 @@ setup_params = dict(
         'six',
     ],
     tests_require=[
-        'nose>=1.1.2',
+        'pytest',
     ],
+    setup_requires=[
+    ] + pytest_runner,
     packages=find_packages(),
     namespace_packages=[],
     include_package_data=True,
