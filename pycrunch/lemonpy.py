@@ -116,8 +116,8 @@ class ResponseHandler(object):
         self.parse_payload(r)
         raise ServerError(r)
 
+from six.moves.http_cookiejar import Cookie
 
-from cookielib import Cookie
 def make_cookie(name, value, domain):
     '''
         Makes a cookie with provided name and value.

@@ -1,9 +1,10 @@
+import six
 from pandas import DataFrame, Categorical, Series, to_datetime
 
 
 def series_from_variable(col, vardef):
     """Return the given Crunch column and variable def as a Pandas Series."""
-    col = [None if (isinstance(item, dict) and item.keys() == ['?']) else item
+    col = [None if (isinstance(item, dict) and list(item.keys()) == ['?']) else item
            for item in col]
 
     if vardef.type == 'categorical':
@@ -24,8 +25,9 @@ def series_from_variable(col, vardef):
 ROWCHUNKSIZE = 1000
 
 
-def dataframe_from_dataset(site, dataset_name_or_id, variables=None):
-    """Return a Pandas DataFrame for the given Crunch Dataset name or id.
+def dataframe(dataset, variables=None):
+    """Return a Pandas DataFrame for the given Crunch Dataset Entity object.
+    Retrieve a dataset using pycrunch.get_dataset("dataset name or id").
 
     If the 'variables' argument is given and not None, it should be a
     single variable alias, or a list of such, in which case only those
@@ -35,12 +37,6 @@ def dataframe_from_dataset(site, dataset_name_or_id, variables=None):
     The returned DataFrame has an extra "metadata" attribute on it:
     a dict of Crunch variable definitions for each Series (keyed by id).
     """
-    ds_catalog = site.datasets
-    try:
-        dataset = ds_catalog.by('name')[dataset_name_or_id].entity
-    except KeyError:
-        dataset = ds_catalog.by('id')[dataset_name_or_id].entity
-
     data = {}
 
     if variables is None:
@@ -48,11 +44,11 @@ def dataframe_from_dataset(site, dataset_name_or_id, variables=None):
         seenrows = 0
         all_data = {}
         while True:
-            t = site.session.get(
+            t = dataset.session.get(
                 "%s?offset=%d&limit=%d" %
                 (dataset.urls['table_url'], seenrows, ROWCHUNKSIZE)
             ).payload
-            for name, value in t.data.iteritems():
+            for name, value in six.iteritems(t.data):
                 if name not in all_data:
                     all_data[name] = []
                 all_data[name].extend(value)
@@ -63,7 +59,7 @@ def dataframe_from_dataset(site, dataset_name_or_id, variables=None):
         metadata = t.metadata
 
         # Convert to Series
-        for varid, col in all_data.iteritems():
+        for varid, col in six.iteritems(all_data):
             vardef = t.metadata[varid]
             data[vardef.alias] = series_from_variable(col, vardef)
     else:

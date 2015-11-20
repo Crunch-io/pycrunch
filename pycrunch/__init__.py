@@ -15,11 +15,16 @@ This will make the code in this directory available to other projects.
 Getting started
 ---------------
 
-Start a simple session via:
+Start a simple site session via:
 
     >>> import pycrunch
-    >>> session = pycrunch.Session("me@mycompany.com", password)
-    >>> site = session.get("https://beta.crunch.io/api/").payload
+    >>> site = pycrunch.connect("me@mycompany.com", "yourpassword", "https://beta.crunch.io/api/")
+
+Or, if you have a crunch access token:
+
+    >>> import pycrunch
+    >>> site = pycrunch.connect_with_token("DFIJFIJWIEJIJFKSJLKKDJKFJSLLSLSL", "https://beta.crunch.io/api/")
+
 
 Then, you can browse the site. Use `print` to pretty-indent JSON payloads:
 
@@ -142,7 +147,7 @@ You typically add new resources to a Catalog via its `create` method:
     })
 """
 
-import urlparse
+from six.moves import urllib
 
 from pycrunch import cubes
 from pycrunch import elements
@@ -173,15 +178,57 @@ class CrunchTable(elements.Document):
 
     element = "crunch:table"
 
+session = None
 
 def connect(user, pw, site_url="https://us.crunch.io/api/"):
-    """Log in to Crunch with a user/pw; return the top-level Site payload."""
-    return Session(user, pw).get(site_url).payload
+    """
+    Log in to Crunch with a user/pw; return the top-level Site payload.  Using
+    this or the other connect method (the first time only) stores a reference
+    to the session created in pycrunch.session for future use.
+
+    Returns the API Root Entity, or errors if unable to connect.
+    """
+    global session
+    ret = Session(user, pw).get(site_url).payload
+    if session is None:
+        session = ret
+    return ret
 
 
 def connect_with_token(token, site_url="https://us.crunch.io/api/"):
-    """Log in to Crunch with a token; return the top-level Site payload."""
-    return Session(
+    """
+    Log in to Crunch with a token; return the top-level Site payload. Using
+    this or the other connect method (the first time only) stores a reference
+    to the session created in pycrunch.session for future use.
+
+    Returns the API Root Entity, or errors if unable to connect.
+    """
+    global session
+    ret = Session(
         token=token,
-        domain=urlparse.urlparse(site_url).netloc
+        domain=urllib.parse.urlparse(site_url).netloc
     ).get(site_url).payload
+    if session is None:
+        session = ret
+    return ret
+
+def get_dataset(dataset_name_or_id, site=None):
+    """
+    Retrieve a reference to a given dataset (either by name, or ID) if it exists.
+    This method uses the library singleton session if the optional "site"
+    parameter is not provided.
+    
+    Returns a Dataset Entity record if the dataset exsists.
+    Raises a KeyError if no such dataset exists.
+    """
+    global session
+    if site is None:
+        site = session
+
+    ds_catalog = site.datasets
+    try:
+        dataset = ds_catalog.by('name')[dataset_name_or_id].entity
+    except KeyError:
+        dataset = ds_catalog.by('id')[dataset_name_or_id].entity
+    return dataset
+
