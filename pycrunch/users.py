@@ -8,7 +8,7 @@ Sharing a dataset
 To share a dataset with an existing user, you need the user's URL.
 A common way to find that is to use the list of users in your account::
 
-    account_users = site.user_url.account_url.users_url
+    account_users = site.user_url.account_url.users
     user = account_users.by('email')["bill.carson@mycorp.com"]
     print(user.dataset_permissions)
     pycrunch.elements.JSONObject(**{
@@ -67,6 +67,6 @@ def invite(account, email, send_invite=None, url_base=None, id_method=None,
     if account_permissions is not None:
         body['account_permissions'] = account_permissions
 
-    return account.users_url.post(
+    return account.users.post(
         data=json.dumps({"element": "shoji:entity", "body": body})
     ).headers['Location']
