@@ -1,1 +1,4 @@
-__version__ = '0.1.15'
+try:
+	__version__ = __import__('pkg_resources').require('pycrunch')[0].version
+except Exception:
+	__version__ = 'unknown'
