@@ -93,7 +93,7 @@ class ResponseHandler(object):
         function exists, r.payload is set to None, and the caller will
         have to examine the Response directly to determine its payload.
         """
-        ct = r.headers.get("Content-Type").split(";", 1)[0]
+        ct = r.headers.get("Content-Type", "").split(";", 1)[0]
         parser = self.parsers.get(ct)
         r.payload = parser(self.session, r) if parser else None
 
