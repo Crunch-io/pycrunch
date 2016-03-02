@@ -46,6 +46,7 @@ setup_params = dict(
         'six',
     ],
     tests_require=[
+        'pandas',
         'pytest',
     ],
     setup_requires=[
@@ -55,6 +56,9 @@ setup_params = dict(
     include_package_data=True,
     package_data={
         'pycrunch': ['*.json', '*.csv']
+    },
+    extras_require={
+        'pandas': ['pandas']
     },
     zip_safe=True,
     entry_points={},

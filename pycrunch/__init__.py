@@ -17,18 +17,18 @@ Getting started
 
 Start a simple site session via:
 
-    >>> import pycrunch
-    >>> site = pycrunch.connect("me@mycompany.com", "yourpassword", "https://beta.crunch.io/api/")
+    >> import pycrunch
+    >> site = pycrunch.connect("me@mycompany.com", "yourpassword", "https://beta.crunch.io/api/")
 
 Or, if you have a crunch access token:
 
-    >>> import pycrunch
-    >>> site = pycrunch.connect_with_token("DFIJFIJWIEJIJFKSJLKKDJKFJSLLSLSL", "https://beta.crunch.io/api/")
+    >> import pycrunch
+    >> site = pycrunch.connect_with_token("DFIJFIJWIEJIJFKSJLKKDJKFJSLLSLSL", "https://beta.crunch.io/api/")
 
 
 Then, you can browse the site. Use `print` to pretty-indent JSON payloads:
 
-    >>> print site
+    >> print site
     pycrunch.shoji.Catalog(**{
         "element": "shoji:catalog",
         "self": "https://beta.crunch.io/api/",
@@ -50,7 +50,7 @@ Then, you can browse the site. Use `print` to pretty-indent JSON payloads:
 URI's in payloads' catalogs, views, fragments, and urls collections
 are followable automatically:
 
-    >>> print site.datasets
+    >> print site.datasets
     pycrunch.shoji.Catalog(**{
         "self": "https://beta.crunch.io/api/datasets/",
         "element": "shoji:catalog",
@@ -70,7 +70,7 @@ are followable automatically:
 Each recognized JSON payload also automatically gives dotted-attribute
 access to the members of each JSON object:
 
-    >>> print site.datasets.index.values()[0]
+    >> print site.datasets.index.values()[0]
     pycrunch.shoji.Tuple(**{
         "owner_display_name": "me@mycompany.com",
         "description": "",
@@ -83,10 +83,10 @@ access to the members of each JSON object:
 Responses may also possess additional helpers, like the `entity` property of
 each Tuple in a catalog's index, which follows the link to the Entity resource:
 
-    >>> print site.datasets.index.values()[0].entity_url
+    >> print site.datasets.index.values()[0].entity_url
     "https://beta.crunch.io/api/datasets/dbf9fca7b727/"
 
-    >>> print site.datasets.index.values()[0].entity
+    >> print site.datasets.index.values()[0].entity
     pycrunch.shoji.Entity(**{
         "self": "https://beta.crunch.io/api/datasets/dbf9fca7b727/",
         "element": "shoji:entity",
@@ -122,10 +122,10 @@ each Tuple in a catalog's index, which follows the link to the Entity resource:
 
 You typically add new resources to a Catalog via its `create` method:
 
-    >>> ds = site.datasets.create({"body": {
+    >> ds = site.datasets.create({"body": {
             'name': "My first dataset"
         }}, refresh=True)
-    >>> gender = ds.variables.create({"body": {
+    >> gender = ds.variables.create({"body": {
             'name': 'Gender',
             'alias': 'gender',
             'type': 'categorical',
@@ -136,7 +136,7 @@ You typically add new resources to a Catalog via its `create` method:
             ],
             'values': [1, 2, {"?": -1}, 2]
         }}, refresh=True)
-    >>> print ds.table.data
+    >> print ds.table.data
     pycrunch.elements.JSONObject(**{
         "e7f361628": [
             1,
