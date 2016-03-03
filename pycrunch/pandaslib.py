@@ -46,7 +46,7 @@ def dataframe(dataset, variables=None):
         while True:
             t = dataset.session.get(
                 "%s?offset=%d&limit=%d" %
-                (dataset.urls['table_url'], seenrows, ROWCHUNKSIZE)
+                (dataset.fragments['table'], seenrows, ROWCHUNKSIZE)
             ).payload
             for name, value in six.iteritems(t.data):
                 if name not in all_data:
@@ -74,7 +74,7 @@ def dataframe(dataset, variables=None):
             except KeyError:
                 raise KeyError('No variable with alias: %s' % variable)
             vardef = t.body
-            value = t.values_url.value
+            value = dataset.session.get(t.views['values']).payload['value']
             data[vardef.alias] = series_from_variable(value, vardef)
             metadata[vardef.id] = vardef
 

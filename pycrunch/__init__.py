@@ -72,53 +72,85 @@ access to the members of each JSON object:
 
     >> print site.datasets.index.values()[0]
     pycrunch.shoji.Tuple(**{
-        "owner_display_name": "me@mycompany.com",
-        "description": "",
-        "id": "dbf9fca7b727",
-        "owner_id": "https://beta.crunch.io/api/users/253b68/",
+        "size": {
+            "rows": 6,
+            "columns": 8
+        },
         "archived": false,
-        "name": "Hog futures tracking (May 2014)"
+        "owner_name": "Me",
+        "description": "",
+        "end_date": null,
+        "owner_id": "https://beta.crunch.io/api/users/a69402/",
+        "current_editor": "https://beta.crunch.io/api/users/a69402/",
+        "creation_time": "2016-03-02T22:19:14.463000+00:00",
+        "current_editor_name": "The Editor",
+        "start_date": null,
+        "permissions": {
+            "edit": true,
+            "change_permissions": true,
+            "add_users": true,
+            "change_weight": true,
+            "view": true
+        },
+        "id": "1234",
+        "name": "Some Kind of Love"
     })
+
 
 Responses may also possess additional helpers, like the `entity` property of
 each Tuple in a catalog's index, which follows the link to the Entity resource:
 
     >> print site.datasets.index.values()[0].entity_url
-    "https://beta.crunch.io/api/datasets/dbf9fca7b727/"
+    "https://beta.crunch.io/api/datasets/1234/"
 
     >> print site.datasets.index.values()[0].entity
-    pycrunch.shoji.Entity(**{
-        "self": "https://beta.crunch.io/api/datasets/dbf9fca7b727/",
-        "element": "shoji:entity",
-        "description": "Detail for a given dataset",
-        "specification": "https://beta.crunch.io/api/specifications/datasets/",
-        "body": {
-            "archived": false,
-            "user_id": "253b68",
-            "name": "Hog futures tracking (May 2014)"
-            "weight": "https://beta.crunch.io/api/datasets/dbf9fca7b727/variables/36f5404/",
-            "creation_time": "2014-03-06T18:23:26.780752+00:00",
-            "description": ""
-        },
-        "catalogs": {
-            "batches": "https://beta.crunch.io/api/datasets/dbf9fca7b727/batches/",
-            "joins": "https://beta.crunch.io/api/datasets/dbf9fca7b727/joins/",
-            "variables": "https://beta.crunch.io/api/datasets/dbf9fca7b727/variables/",
-            "filters": "https://beta.crunch.io/api/datasets/dbf9fca7b727/filters/",
-            ...
-        },
-        "views": {
-            "cube": "https://beta.crunch.io/api/datasets/dbf9fca7b727/cube/",
-            ...
-        },
-        "urls": {
-            "revision_url": "https://beta.crunch.io/api/datasets/dbf9fca7b727/revision/",
-            ...
-        },
-        "fragments": {
-            "table": "https://beta.crunch.io/api/datasets/dbf9fca7b727/table/"
-        }
-    })
+    pycrunch.shoji.Entity(**{u'body': {u'archived': False,
+           u'creation_time': u'2015-03-18T01:56:12.462000',
+           u'current_editor': u'https://test01.crunch.io/api/users/00002/',
+           u'current_editor_name': u'Jean-Luc Picard',
+           u'description': u'',
+           u'end_date': None,
+           u'id': u'3e78dab27eba41a3b014edb7ef962dd3',
+           u'name': u'a_econ_few_columns',
+           u'notes': u'',
+           u'owner': u'https://test01.crunch.io/api/users/00002/',
+           u'permissions': {u'add_users': True,
+                            u'change_permissions': True,
+                            u'change_weight': True,
+                            u'edit': True,
+                            u'view': True},
+           u'size': {u'columns': 14, u'rows': 1000},
+           u'start_date': None,
+           u'weight': u'https://beta.crunch.io/api/datasets/1234/variables/c1820eb7befd4704beacfdbcb430969c/'},
+           u'catalogs': {u'actions': u'https://beta.crunch.io/api/datasets/1234/actions/',
+                         u'batches': u'https://beta.crunch.io/api/datasets/1234/batches/',
+                         u'comparisons': u'https://beta.crunch.io/api/datasets/1234/comparisons/',
+                         u'decks': u'https://beta.crunch.io/api/datasets/1234/decks/',
+                         u'filters': u'https://beta.crunch.io/api/datasets/1234/filters/',
+                         u'forks': u'https://beta.crunch.io/api/datasets/1234/forks/',
+                         u'joins': u'https://beta.crunch.io/api/datasets/1234/joins/',
+                         u'multitables': u'https://beta.crunch.io/api/datasets/1234/multitables/',
+                         u'permissions': u'https://beta.crunch.io/api/datasets/1234/permissions/',
+                         u'savepoints': u'https://beta.crunch.io/api/datasets/1234/savepoints/',
+                         u'variables': u'https://beta.crunch.io/api/datasets/1234/variables/',
+                         u'weight_variables': u'https://beta.crunch.io/api/datasets/1234/weight_variables/'},
+           u'description': u'Detail for a given dataset',
+           u'element': u'shoji:entity',
+           u'fragments': {u'exclusion': u'https://beta.crunch.io/api/datasets/1234/exclusion/',
+                          u'main_deck': u'https://beta.crunch.io/api/datasets/1234/decks/bf57e39d42ae472b91e03de9a299e7c4/',
+                          u'state': u'https://beta.crunch.io/api/datasets/1234/state/',
+                          u'stream': u'https://beta.crunch.io/api/datasets/1234/stream/',
+                          u'table': u'https://beta.crunch.io/api/datasets/1234/table/'},
+           u'self': u'https://beta.crunch.io/api/datasets/1234/',
+           u'specification': u'https://test01.crunch.io/api/specifications/datasets/',
+           u'urls': {u'editor_url': u'https://test01.crunch.io/api/users/00002/',
+                     u'owner_url': u'https://test01.crunch.io/api/users/00002/',
+                     u'user_url': u'https://test01.crunch.io/api/users/00002/'},
+           u'views': {u'applied_filters': u'https://beta.crunch.io/api/datasets/1234/filters/applied/',
+                      u'cube': u'https://beta.crunch.io/api/datasets/1234/cube/',
+                      u'export': u'https://beta.crunch.io/api/datasets/1234/export/',
+                      u'summary': u'https://beta.crunch.io/api/datasets/1234/summary/'}}
+            )
 
 You typically add new resources to a Catalog via its `create` method:
 
@@ -181,7 +213,7 @@ class CrunchTable(elements.Document):
 
 session = None
 
-def connect(user, pw, site_url="https://us.crunch.io/api/"):
+def connect(user, pw, site_url="https://beta.crunch.io/api/"):
     """
     Log in to Crunch with a user/pw; return the top-level Site payload.  Using
     this or the other connect method (the first time only) stores a reference
