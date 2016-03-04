@@ -3,15 +3,7 @@
 
 import os
 import io
-import re
 import sys
-
-thisdir = os.path.abspath(os.path.dirname(__file__))
-
-with open(os.path.join(thisdir, 'pycrunch', 'version.py')) as v_file:
-    VERSION = re.compile(
-        r".*__version__ = '(.*?)'",
-        re.S).match(v_file.read()).group(1)
 
 from setuptools import setup, find_packages
 
@@ -28,7 +20,7 @@ pytest_runner = ['pytest_runner'] if needs_pytest else []
 
 setup_params = dict(
     name='pycrunch',
-    version=VERSION,
+    use_scm_version=True,
     description="Crunch.io Client Library",
     long_description=get_long_desc(),
     url='https://github.com/Crunch-io/pycrunch',
@@ -49,6 +41,8 @@ setup_params = dict(
         'pytest',
     ],
     setup_requires=[
+        'setuptools_scm',
+        'setuptools_scm_git_archive',
     ] + pytest_runner,
     packages=find_packages(),
     namespace_packages=[],
