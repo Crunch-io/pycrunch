@@ -200,6 +200,12 @@ class Entity(elements.Document):
         self.body.update(body_attrs)
         return payload
 
+    def replace(self, entity=None):
+        """PUT the given entity (default: self) to self.url."""
+        if entity is None:
+            entity = self
+        return super(Entity, self).put(data=entity.json).payload
+
 
 class View(elements.Document):
 
