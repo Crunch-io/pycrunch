@@ -42,6 +42,7 @@ setup_params = dict(
     ],
     setup_requires=[
         'setuptools_scm',
+        'setuptools_scm_git_archive',
     ] + pytest_runner,
     packages=find_packages(),
     namespace_packages=[],
