@@ -116,6 +116,31 @@ class ResponseHandler(object):
         self.parse_payload(r)
         raise ServerError(r)
 
+from six.moves.http_cookiejar import Cookie
+
+def make_cookie(name, value, domain):
+    '''
+        Makes a cookie with provided name and value.
+    '''
+    return Cookie(
+        version=0,
+        name=name,
+        value=value,
+        port=None,
+        port_specified=False,
+        domain=domain,
+        domain_specified=True,
+        domain_initial_dot=False,
+        path="/",
+        path_specified=True,
+        secure=False,
+        expires=None,
+        discard=False,
+        comment=None,
+        comment_url=None,
+        rest=None
+    )
+
 
 class Session(requests.Session):
 
@@ -124,7 +149,13 @@ class Session(requests.Session):
 
     def __init__(self):
         super(Session, self).__init__()
+
         self.headers = self.__class__.headers
+
+        if self.token:
+            domain = self.domain or 'local.crunch.io'
+            self.cookies.set_cookie(make_cookie('token', self.token, domain))
+
         self.hooks["response"] = self.handler_class(self)
 
 

@@ -16,11 +16,15 @@ This will make the code in this directory available to other projects.
 Getting started
 ---------------
 
-Start a simple session via:
+Start a simple site session via:
 
     >>> import pycrunch
-    >>> session = pycrunch.Session("me@mycompany.com", password)
-    >>> site = session.get("https://beta.crunch.io/api/").payload
+    >>> site = pycrunch.connect("me@mycompany.com", "yourpassword", "https://beta.crunch.io/api/")
+
+Or, if you have a crunch access token:
+
+    >>> import pycrunch
+    >>> site = pycrunch.connect_with_token("DFIJFIJWIEJIJFKSJLKKDJKFJSLLSLSL", "https://beta.crunch.io/api/")
 
 Then, you can browse the site. Use `print` to pretty-indent JSON payloads:
 
@@ -141,3 +145,11 @@ You typically add new resources to a Catalog via its `create` method:
             2
         ]
     })
+
+To access a Pandas Dataframe of the data in your dataset:
+
+    >>> from pycrunch import pandaslib as crunchpandas
+    >>> df = crunchpandas.dataframe_from_dataset(site,'baadf00d000339d9faadg00beab11e')
+    >>> print(df)
+    < Draws a dataframe table >
+
