@@ -37,7 +37,7 @@ class Tuple(elements.JSONObject):
         return self.__class__(self.session, self.entity_url, **self)
 
     def fetch(self, *args, **kwargs):
-        r = self.session.get(self.entity_url, *args, **kwargs)
+        r = self.session.get(self.entity_url.absolute, *args, **kwargs)
         if r.payload is None:
             raise TypeError("Response could not be parsed.", r)
         return r.payload
