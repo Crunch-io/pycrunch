@@ -89,18 +89,17 @@ elements = {}
 
 def parse_element(session, j):
     """Recursively replace dict with appropriate subclasses of JSONObjects."""
-    if isinstance(j, dict):
-        j = dict(
-            (k, parse_element(session, v))
-            for k, v in six.iteritems(j)
-        )
+    t = type(j)
+    if t is dict:
+        for k, v in list(six.iteritems(j)):
+            j[k] = parse_element(session, v)
 
         elem = j.get("element", None)
         if elem in elements:
             return elements[elem](session, **j)
         else:
             return JSONObject(**j)
-    elif isinstance(j, list):
+    elif t is list:
         return [parse_element(session, i) for i in j]
     else:
         return j
