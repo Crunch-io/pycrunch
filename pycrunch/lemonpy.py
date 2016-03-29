@@ -166,7 +166,6 @@ class URL(str):
         return str.__new__(cls, value)
 
     def __init__(self, value, base):
-        base, frag = urllib.parse.urldefrag(base)
         self.base = base
 
     @property

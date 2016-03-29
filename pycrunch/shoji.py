@@ -5,6 +5,7 @@ for the latest Shoji specification.
 """
 
 import json
+from six.moves import urllib
 
 import six
 
@@ -30,7 +31,7 @@ class Tuple(elements.JSONObject):
         self.session = session
         self.entity_url = entity_url
         self._entity = None
-        super(Tuple, self).__init__(**members)
+        elements.JSONObject.__init__(self, **members)
 
     def copy(self):
         """Return a (shallow) copy of self."""
@@ -65,18 +66,17 @@ class Index(elements.JSONObject):
     def __init__(self, session, catalog_url, **members):
         self.session = session
         self.catalog_url = catalog_url
-        new_members = {}
+        catalog_url_absolute, frag = urllib.parse.urldefrag(catalog_url.absolute)
+
         for entity_url, tup in six.iteritems(members):
-            url = entity_url
-            if not isinstance(url, URL):
-                url = URL(url, catalog_url.absolute)
+            if tup is not None:
+                url = entity_url
+                if not hasattr(url, "relative_to"):  # Faster than isinstance(url, URL)
+                    url = URL(url, catalog_url_absolute)
 
-            if tup is None:
-                new_members[entity_url] = None
-            else:
-                new_members[entity_url] = Tuple(session, url, **tup)
+                members[entity_url] = Tuple(session, url, **tup)
 
-        super(Index, self).__init__(**new_members)
+        elements.JSONObject.__init__(self, **members)
 
 
 class Catalog(elements.Document):
