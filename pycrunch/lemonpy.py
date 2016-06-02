@@ -144,13 +144,15 @@ def make_cookie(name, value, domain):
 
 class Session(requests.Session):
 
-    headers = {}
+    headers = {
+        "Accept-Encoding": "gzip",
+    }
     handler_class = ResponseHandler
 
     def __init__(self):
         super(Session, self).__init__()
 
-        self.headers = self.__class__.headers
+        self.headers.update(self.__class__.headers)
 
         if self.token:
             domain = self.domain or 'local.crunch.io'
