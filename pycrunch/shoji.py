@@ -176,7 +176,7 @@ class Catalog(elements.Document):
             else:
                 return entity.wait_progress(progress_url, timeout=timeout)
         else:
-            return r.payload
+            return entity
 
 
 class Entity(elements.Document):
