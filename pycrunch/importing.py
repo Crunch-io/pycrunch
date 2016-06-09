@@ -78,7 +78,7 @@ class Importer(object):
             'source': source_url,
             'workflow': workflow or [],
         })
-        return ds.batches.create(batch)
+        return ds.batches.create(batch).refresh()
 
     def append_rows(self, ds, rows):
         """Append the given rows of Python values. Return the new Batch."""
