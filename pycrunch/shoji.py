@@ -163,7 +163,9 @@ class Catalog(elements.Document):
     def _wait_for_progress(self, r, timeout=30):
         if r.status_code == 201 and r.headers.get('Location') is not None:
             # Progress API convention, and it already completed.
-            return self.session.get(r.headers['Location']).payload
+            entity = Entity(self.session)
+            entity.self = r.headers['Location']
+            return entity
         elif r.status_code == 202 and r.headers.get('Location') is not None:
             # Progress  API and it didn't complete.
             entity = Entity(self.session)
@@ -220,8 +222,7 @@ class Entity(elements.Document):
         else:
             # Loop completed due to timeout
             raise EntityProgressTimeoutError(self, progress_url)
-
-        return self.refresh()
+        return self
 
 
 class View(elements.Document):
