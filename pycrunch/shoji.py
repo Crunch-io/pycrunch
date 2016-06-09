@@ -5,12 +5,14 @@ for the latest Shoji specification.
 """
 
 import json
+
+import time
 from six.moves import urllib
 
 import six
 
 from pycrunch import elements
-from pycrunch.lemonpy import URL
+from pycrunch.lemonpy import URL, ClientError
 
 
 class Tuple(elements.JSONObject):
@@ -93,7 +95,7 @@ class Catalog(elements.Document):
                 members['index'] = Index(session, members['self'], **members['index'])
         super(Catalog, __this__).__init__(session, **members)
 
-    def create(self, entity=None, refresh=None):
+    def create(self, entity=None):
         """POST the given Entity to this catalog to create a new resource.
 
         The 'entity' arg may be a complete shoji.Entity, in which case
@@ -108,34 +110,13 @@ class Catalog(elements.Document):
 
             foo_catalog.create({"bar": qux})
 
-        An entity is returned. If 'refresh' is:
-
-            * True: an additional GET is performed and the Entity it fetches
-              is returned (which is assumed to have the correct "self" member).
-            * False: no additional GET is performed, and a minimal Entity
-              is returned; either way, its "self" member is set to the URL
-              of the newly-created resource.
-            * None (the default): If an Entity was provided, behave like
-              'refresh' was False. If not provided, behave like 'refresh'
-              was True.
+        An entity is returned.
         """
-        if refresh is None:
-            refresh = (entity is None)
-
         if entity is None:
             entity = Entity(self.session)
         elif isinstance(entity, dict) and not isinstance(entity, Entity):
             entity = Entity(self.session, **entity)
-
-        r = self.post(data=entity.json)
-        new_url = r.headers["Location"]
-
-        if refresh:
-            entity = self.session.get(new_url).payload
-        else:
-            entity.self = new_url
-
-        return entity
+        return self._wait_for_progress(self.post(data=entity.json))
 
     def by(self, attr):
         """Return the Tuples of self.index indexed by the given 'attr' instead.
@@ -179,6 +160,24 @@ class Catalog(elements.Document):
         p = self.__class__(self.session, self=self.self, index={entity_url: None})
         return self.patch(data=p.json).payload
 
+    def _wait_for_progress(self, r, timeout=30):
+        if r.status_code == 201 and r.headers.get('Location') is not None:
+            # Progress API convention, and it already completed.
+            return self.session.get(r.headers['Location']).payload
+        elif r.status_code == 202 and r.headers.get('Location') is not None:
+            # Progress  API and it didn't complete.
+            entity = Entity(self.session)
+            entity.self = r.headers['Location']
+            try:
+                progress_url = r.payload['value']
+            except:
+                # Not a progress API return an incomplete entity, user will have to refresh it
+                return entity
+            else:
+                return entity.wait_progress(progress_url, timeout=timeout)
+        else:
+            return r.payload
+
 
 class Entity(elements.Document):
 
@@ -205,6 +204,24 @@ class Entity(elements.Document):
         if entity is None:
             entity = self
         return super(Entity, self).put(data=entity.json).payload
+
+    def wait_progress(self, progress_url, timeout=None):
+        begin = time.time()
+        while timeout is None or time.time() - begin < timeout:
+            r = self.session.get(progress_url)
+            progress = r.payload['value']
+            if progress['progress'] == -1:
+                # Completed due to error
+                raise CrunchError(progress['message'])
+            elif progress['progress'] == 100:
+                # Completed with success
+                break
+            time.sleep(0.5)
+        else:
+            # Loop completed due to timeout
+            raise EntityProgressTimeoutError(self, progress_url)
+
+        return self.refresh()
 
 
 class View(elements.Document):
@@ -247,3 +264,29 @@ class Order(elements.Document):
         """Update the Order with the new graph."""
         self['graph'] = newgraph
         super(Order, self).put(data=self.json)
+
+
+class EntityProgressTimeoutError(Exception):
+    def __init__(self, entity, progress_url):
+        super(EntityProgressTimeoutError, self).__init__(
+            'Entity Progress did not complete before timeout. '
+            'Trap this exception and call exc.entity.wait_progress(exc.progress_url) '
+            'to wait for completion explicitly.'
+        )
+        self.entity = entity
+        self.progress_url = progress_url
+
+
+class CrunchError(ClientError):
+    # For backward compatibility inherit from ClientError
+
+    def __init__(self, message):
+        Exception.__init__(self, message)
+
+    @property
+    def status_code(self):
+        return None
+
+    @property
+    def message(self):
+        return self.args[0]
