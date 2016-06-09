@@ -161,22 +161,18 @@ class Catalog(elements.Document):
         return self.patch(data=p.json).payload
 
     def _wait_for_progress(self, entity, r, timeout=30):
-        if r.status_code == 201 and r.headers.get('Location') is not None:
-            # Progress API convention, and it already completed.
-            entity.self = r.headers['Location']
-            return entity
-        elif r.status_code == 202 and r.headers.get('Location') is not None:
-            # Progress  API and it didn't complete.
-            entity.self = r.headers['Location']
+        entity.self = r.headers['Location']
+        if r.status_code == 202:
             try:
                 progress_url = r.payload['value']
             except:
-                # Not a progress API return an incomplete entity, user will have to refresh it
-                return entity
+                # Not a progress API just return the incomplete entity.
+                # User will refresh it.
+                pass
             else:
-                return entity.wait_progress(progress_url, timeout=timeout)
-        else:
-            return entity
+                # We have a progress_url, wait for completion
+                entity.wait_progress(progress_url, timeout=timeout)
+        return entity
 
 
 class Entity(elements.Document):
