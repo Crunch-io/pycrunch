@@ -161,7 +161,7 @@ class Catalog(elements.Document):
         return self.patch(data=p.json).payload
 
     def _wait_for_progress(self, entity, r, timeout=30):
-        entity.self = r.headers['Location']
+        entity.self = URL(r.headers['Location'], '')
         if r.status_code == 202:
             try:
                 progress_url = r.payload['value']
@@ -202,7 +202,7 @@ class Entity(elements.Document):
         return super(Entity, self).put(data=entity.json).payload
 
     def wait_progress(self, r, timeout=None):
-        self.self = r.headers['Location']
+        self.self = URL(r.headers['Location'], '')
         progress_url = r.payload['value']
 
         begin = time.time()
