@@ -171,7 +171,7 @@ class Catalog(elements.Document):
                 pass
             else:
                 # We have a progress_url, wait for completion
-                entity.wait_progress(progress_url, timeout=timeout)
+                entity.wait_progress(r, timeout=timeout)
         return entity
 
 
@@ -201,7 +201,10 @@ class Entity(elements.Document):
             entity = self
         return super(Entity, self).put(data=entity.json).payload
 
-    def wait_progress(self, progress_url, timeout=None):
+    def wait_progress(self, r, timeout=None):
+        self.self = r.headers['Location']
+        progress_url = r.payload['value']
+
         begin = time.time()
         while timeout is None or time.time() - begin < timeout:
             r = self.session.get(progress_url)
@@ -215,7 +218,8 @@ class Entity(elements.Document):
             time.sleep(0.5)
         else:
             # Loop completed due to timeout
-            raise TaskProgressTimeoutError(self, progress_url)
+            raise TaskProgressTimeoutError(self, r)
+
         return self
 
 
@@ -262,14 +266,14 @@ class Order(elements.Document):
 
 
 class TaskProgressTimeoutError(Exception):
-    def __init__(self, entity, progress_url):
+    def __init__(self, entity, response):
         super(TaskProgressTimeoutError, self).__init__(
             'Task Progress did not complete before timeout. '
-            'Trap this exception and call exc.entity.wait_progress(exc.progress_url) '
+            'Trap this exception and call exc.entity.wait_progress(exc.response) '
             'to wait for completion explicitly.'
         )
         self.entity = entity
-        self.progress_url = progress_url
+        self.response = response
 
 
 class TaskError(ClientError, ServerError):
