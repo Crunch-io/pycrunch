@@ -12,7 +12,7 @@ from six.moves import urllib
 import six
 
 from pycrunch import elements
-from pycrunch.lemonpy import URL, ClientError
+from pycrunch.lemonpy import URL, ClientError, ServerError
 
 
 class Tuple(elements.JSONObject):
@@ -208,14 +208,14 @@ class Entity(elements.Document):
             progress = r.payload['value']
             if progress['progress'] == -1:
                 # Completed due to error
-                raise CrunchError(progress['message'])
+                raise TaskError(progress['message'])
             elif progress['progress'] == 100:
                 # Completed with success
                 break
             time.sleep(0.5)
         else:
             # Loop completed due to timeout
-            raise EntityProgressTimeoutError(self, progress_url)
+            raise TaskProgressTimeoutError(self, progress_url)
         return self
 
 
@@ -261,10 +261,10 @@ class Order(elements.Document):
         super(Order, self).put(data=self.json)
 
 
-class EntityProgressTimeoutError(Exception):
+class TaskProgressTimeoutError(Exception):
     def __init__(self, entity, progress_url):
-        super(EntityProgressTimeoutError, self).__init__(
-            'Entity Progress did not complete before timeout. '
+        super(TaskProgressTimeoutError, self).__init__(
+            'Task Progress did not complete before timeout. '
             'Trap this exception and call exc.entity.wait_progress(exc.progress_url) '
             'to wait for completion explicitly.'
         )
@@ -272,8 +272,8 @@ class EntityProgressTimeoutError(Exception):
         self.progress_url = progress_url
 
 
-class CrunchError(ClientError):
-    # For backward compatibility inherit from ClientError
+class TaskError(ClientError, ServerError):
+    # For backward compatibility inherit from ClientError and ServerError
 
     def __init__(self, message):
         Exception.__init__(self, message)
