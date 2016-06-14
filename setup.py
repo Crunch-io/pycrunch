@@ -48,6 +48,7 @@ setup_params = dict(
     tests_require=[
         'pandas',
         'pytest',
+        'mock'
     ],
     setup_requires=[
     ] + pytest_runner,

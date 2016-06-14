@@ -15,6 +15,9 @@ from pycrunch import elements
 from pycrunch.lemonpy import URL, ClientError, ServerError
 
 
+DEFAULT_PROGRESS_TIMEOUT = 30
+
+
 class Tuple(elements.JSONObject):
     """A Shoji Tuple of attributes.
 
@@ -116,7 +119,8 @@ class Catalog(elements.Document):
             entity = Entity(self.session)
         elif isinstance(entity, dict) and not isinstance(entity, Entity):
             entity = Entity(self.session, **entity)
-        return self._wait_for_progress(entity, self.post(data=entity.json))
+        return self._wait_for_progress(entity, self.post(data=entity.json),
+                                       timeout=DEFAULT_PROGRESS_TIMEOUT)
 
     def by(self, attr):
         """Return the Tuples of self.index indexed by the given 'attr' instead.
@@ -160,7 +164,7 @@ class Catalog(elements.Document):
         p = self.__class__(self.session, self=self.self, index={entity_url: None})
         return self.patch(data=p.json).payload
 
-    def _wait_for_progress(self, entity, r, timeout=30):
+    def _wait_for_progress(self, entity, r, timeout=DEFAULT_PROGRESS_TIMEOUT):
         entity.self = URL(r.headers['Location'], '')
         if r.status_code == 202:
             try:
@@ -207,8 +211,8 @@ class Entity(elements.Document):
 
         begin = time.time()
         while timeout is None or time.time() - begin < timeout:
-            r = self.session.get(progress_url)
-            progress = r.payload['value']
+            prog_r = self.session.get(progress_url)
+            progress = prog_r.payload['value']
             if progress['progress'] == -1:
                 # Completed due to error
                 raise TaskError(progress['message'])
