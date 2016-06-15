@@ -32,6 +32,7 @@ class TestShojiCreation(TestCase):
 
     def test_create_waits_for_progress(self):
         sess = mock.MagicMock()
+        sess.progress_tracking = DefaultProgressTracking(timeout=1.0, interval=0.1)
         sess.post = mock.MagicMock(return_value=self._mkresp(
             status_code=202,
             headers={'Location': 'http://host.com/somewhere'},
@@ -93,6 +94,7 @@ class TestShojiCreation(TestCase):
 
     def test_create_raises_failures(self):
         sess = mock.MagicMock()
+        sess.progress_tracking = DefaultProgressTracking(timeout=1.0, interval=0.1)
         sess.post = mock.MagicMock(return_value=self._mkresp(
             status_code=202,
             headers={'Location': 'http://host.com/somewhere'},
