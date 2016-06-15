@@ -184,6 +184,7 @@ from six.moves import urllib
 from pycrunch import cubes
 from pycrunch import elements
 from pycrunch import shoji
+from pycrunch.shoji import TaskError, TaskProgressTimeoutError
 from pycrunch import importing
 from pycrunch.lemonpy import ClientError, ServerError, urljoin
 from pycrunch.version import __version__
@@ -194,6 +195,7 @@ __all__ = [
     'cubes',
     'elements',
     'shoji',
+    'TaskError', 'TaskProgressTimeoutError',
     'importing',
     'ClientError', 'ServerError', 'CrunchError'
     'Session',
@@ -213,7 +215,8 @@ class CrunchTable(elements.Document):
 
 session = None
 
-def connect(user, pw, site_url="https://beta.crunch.io/api/"):
+
+def connect(user, pw, site_url="https://beta.crunch.io/api/", progress_tracking=None):
     """
     Log in to Crunch with a user/pw; return the top-level Site payload.  Using
     this or the other connect method (the first time only) stores a reference
@@ -222,13 +225,13 @@ def connect(user, pw, site_url="https://beta.crunch.io/api/"):
     Returns the API Root Entity, or errors if unable to connect.
     """
     global session
-    ret = Session(user, pw).get(site_url).payload
+    ret = Session(user, pw, progress_tracking=progress_tracking).get(site_url).payload
     if session is None:
         session = ret
     return ret
 
 
-def connect_with_token(token, site_url="https://us.crunch.io/api/"):
+def connect_with_token(token, site_url="https://us.crunch.io/api/", progress_tracking=None):
     """
     Log in to Crunch with a token; return the top-level Site payload. Using
     this or the other connect method (the first time only) stores a reference
@@ -239,11 +242,13 @@ def connect_with_token(token, site_url="https://us.crunch.io/api/"):
     global session
     ret = Session(
         token=token,
-        domain=urllib.parse.urlparse(site_url).netloc
+        domain=urllib.parse.urlparse(site_url).netloc,
+        progress_tracking=progress_tracking
     ).get(site_url).payload
     if session is None:
         session = ret
     return ret
+
 
 def get_dataset(dataset_name_or_id, site=None):
     """
