@@ -19,14 +19,15 @@ class Importer(object):
     with the given id.
     """
 
-    def __init__(self, async=True, retries=40, frequency=0.25,
-                 backoff_rate=1.1, backoff_max=30, strict=None):
-        self.async = async
+    def __init__(self, retries=40, frequency=0.25,
+                 backoff_rate=1.1, backoff_max=30, strict=None,
+                 progress_tracker=None):
         self.retries = retries
         self.frequency = frequency
         self.backoff_rate = backoff_rate
         self.backoff_max = backoff_max
         self.strict = strict
+        self.progress_tracker = progress_tracker
 
     def wait_for_batch_status(self, batch, status):
         """Wait for the given status(es) and return the batch. Error if not reached."""
@@ -78,29 +79,8 @@ class Importer(object):
         batch = shoji.Entity(ds.session, body={
             'source': source_url,
             'workflow': workflow or [],
-            'async': async,
         })
-        ds.batches.create(batch)
-
-        if async:
-            # Wait for the batch to be ready...
-            batch = self.wait_for_batch_status(batch, ['ready', 'imported'])
-            if batch.body.status == 'ready':
-                # Two-stage behavior: Tell the batch to start appending.
-                batch_part = shoji.Entity(batch.session, body={'status': 'importing'})
-                batch.patch(data=batch_part.json)
-
-                # Wait for the batch to be imported...
-                batch = self.wait_for_batch_status(batch, 'imported')
-        else:
-            batch.refresh()
-            if batch.body.status == 'ready':
-                # Two-stage behavior: Tell the batch to start appending.
-                batch_part = shoji.Entity(batch.session, body={'status': 'importing'})
-                batch.patch(data=batch_part.json)
-                batch.refresh()
-
-        return batch
+        return ds.batches.create(batch, progress_tracker=self.progress_tracker).refresh()
 
     def append_rows(self, ds, rows):
         """Append the given rows of Python values. Return the new Batch."""
