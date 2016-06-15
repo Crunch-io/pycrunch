@@ -20,12 +20,14 @@ class Importer(object):
     """
 
     def __init__(self, retries=40, frequency=0.25,
-                 backoff_rate=1.1, backoff_max=30, strict=None):
+                 backoff_rate=1.1, backoff_max=30, strict=None,
+                 progress_tracker=None):
         self.retries = retries
         self.frequency = frequency
         self.backoff_rate = backoff_rate
         self.backoff_max = backoff_max
         self.strict = strict
+        self.progress_tracker = progress_tracker
 
     def wait_for_batch_status(self, batch, status):
         """Wait for the given status(es) and return the batch. Error if not reached."""
@@ -78,7 +80,7 @@ class Importer(object):
             'source': source_url,
             'workflow': workflow or [],
         })
-        return ds.batches.create(batch).refresh()
+        return ds.batches.create(batch, progress_tracker=self.progress_tracker).refresh()
 
     def append_rows(self, ds, rows):
         """Append the given rows of Python values. Return the new Batch."""

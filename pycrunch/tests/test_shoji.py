@@ -4,8 +4,10 @@ import json
 import mock
 from unittest import TestCase
 
+import sys
 from requests import Response
 
+from pycrunch.progress import DefaultProgressTracking, SimpleTextBarProgressTracking
 from pycrunch.shoji import Catalog, TaskProgressTimeoutError, TaskError
 
 
@@ -49,6 +51,7 @@ class TestShojiCreation(TestCase):
 
     def test_create_timesout(self):
         sess = mock.MagicMock()
+        sess.progress_tracking = DefaultProgressTracking(timeout=0.1, interval=0.1)
         sess.post = mock.MagicMock(return_value=self._mkresp(
             status_code=202,
             headers={'Location': 'http://host.com/somewhere'},
@@ -61,18 +64,11 @@ class TestShojiCreation(TestCase):
         ])
 
         c = Catalog(self='http://host.com/catalog', session=sess)
-
-        import pycrunch.shoji
-        progress_timeout = pycrunch.shoji.DEFAULT_PROGRESS_TIMEOUT
-
-        try:
-            pycrunch.shoji.DEFAULT_PROGRESS_TIMEOUT = 0.1
-            self.assertRaises(TaskProgressTimeoutError, c.create, {'somedata': 1})
-        finally:
-            pycrunch.shoji.DEFAULT_PROGRESS_TIMEOUT = progress_timeout
+        self.assertRaises(TaskProgressTimeoutError, c.create, {'somedata': 1})
 
     def test_create_timesout_continuation(self):
         sess = mock.MagicMock()
+        sess.progress_tracking = DefaultProgressTracking(timeout=0.1, interval=0.1)
         sess.post = mock.MagicMock(return_value=self._mkresp(
             status_code=202,
             headers={'Location': 'http://host.com/somewhere'},
@@ -86,21 +82,16 @@ class TestShojiCreation(TestCase):
 
         c = Catalog(self='http://host.com/catalog', session=sess)
 
-        import pycrunch.shoji
-        progress_timeout = pycrunch.shoji.DEFAULT_PROGRESS_TIMEOUT
-
         try:
-            pycrunch.shoji.DEFAULT_PROGRESS_TIMEOUT = 0.1
             c.create({'somedata': 1})
         except TaskProgressTimeoutError as e:
+            sess.progress_tracking = DefaultProgressTracking(timeout=None, interval=0.1)
             e.entity.wait_progress(e.response)
             self.assertEqual(sess.get.call_count, 3)
         else:
             assert False, "Should have raised TaskProgressTimeoutError"
-        finally:
-            pycrunch.shoji.DEFAULT_PROGRESS_TIMEOUT = progress_timeout
 
-    def test_create_raieses_failures(self):
+    def test_create_raises_failures(self):
         sess = mock.MagicMock()
         sess.post = mock.MagicMock(return_value=self._mkresp(
             status_code=202,
@@ -114,3 +105,31 @@ class TestShojiCreation(TestCase):
 
         c = Catalog(self='http://host.com/catalog', session=sess)
         self.assertRaises(TaskError, c.create, {'somedata': 1})
+
+    def test_create_progressbar(self):
+        sess = mock.MagicMock()
+        sess.post = mock.MagicMock(return_value=self._mkresp(
+            status_code=202,
+            headers={'Location': 'http://host.com/somewhere'},
+            payload={"value": 'http://host.com/progress/1'}
+        ))
+        sess.get = mock.MagicMock(side_effect=[
+            self._mkresp(status_code=200, payload={'value': {'progress': i*10}}) for i in range(11)
+        ])
+
+        c = Catalog(self='http://host.com/catalog', session=sess)
+
+        class FakeStdout(object):
+            writes = []
+            def write(self, text):
+                self.writes.append(text)
+            def flush(self):
+                pass
+
+        with mock.patch.object(sys, 'stdout', FakeStdout()):
+            c.create({'somedata': 1}, progress_tracker=SimpleTextBarProgressTracking(timeout=None,
+                                                                                     interval=0.1))
+
+        # Check we printed the progressbar up to 100%.
+        self.assertEqual(''.join(FakeStdout.writes).count('-'),
+                         SimpleTextBarProgressTracking.BAR_WIDTH)

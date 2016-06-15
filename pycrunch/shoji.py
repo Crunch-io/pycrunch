@@ -15,9 +15,6 @@ from pycrunch import elements
 from pycrunch.lemonpy import URL, ClientError, ServerError
 
 
-DEFAULT_PROGRESS_TIMEOUT = 30
-
-
 class Tuple(elements.JSONObject):
     """A Shoji Tuple of attributes.
 
@@ -98,7 +95,7 @@ class Catalog(elements.Document):
                 members['index'] = Index(session, members['self'], **members['index'])
         super(Catalog, __this__).__init__(session, **members)
 
-    def create(self, entity=None):
+    def create(self, entity=None, progress_tracker=None):
         """POST the given Entity to this catalog to create a new resource.
 
         The 'entity' arg may be a complete shoji.Entity, in which case
@@ -113,14 +110,17 @@ class Catalog(elements.Document):
 
             foo_catalog.create({"bar": qux})
 
+        The `progress_tracker` argument allows overriding progress tracking
+        configuration provided by session.
+        See ``Entity.wait_progress`` for details.
+
         An entity is returned.
         """
         if entity is None:
             entity = Entity(self.session)
         elif isinstance(entity, dict) and not isinstance(entity, Entity):
             entity = Entity(self.session, **entity)
-        return self._wait_for_progress(entity, self.post(data=entity.json),
-                                       timeout=DEFAULT_PROGRESS_TIMEOUT)
+        return self._wait_for_progress(entity, self.post(data=entity.json), progress_tracker)
 
     def by(self, attr):
         """Return the Tuples of self.index indexed by the given 'attr' instead.
@@ -164,7 +164,7 @@ class Catalog(elements.Document):
         p = self.__class__(self.session, self=self.self, index={entity_url: None})
         return self.patch(data=p.json).payload
 
-    def _wait_for_progress(self, entity, r, timeout=DEFAULT_PROGRESS_TIMEOUT):
+    def _wait_for_progress(self, entity, r, progress_tracker):
         entity.self = URL(r.headers['Location'], '')
         if r.status_code == 202:
             try:
@@ -175,7 +175,7 @@ class Catalog(elements.Document):
                 pass
             else:
                 # We have a progress_url, wait for completion
-                entity.wait_progress(r, timeout=timeout)
+                entity.wait_progress(r, progress_tracker)
         return entity
 
 
@@ -205,21 +205,44 @@ class Entity(elements.Document):
             entity = self
         return super(Entity, self).put(data=entity.json).payload
 
-    def wait_progress(self, r, timeout=None):
+    def wait_progress(self, r, progress_tracker=None):
+        """Waits for completion of an Entity from API response that provides progress reporting.
+
+        The entity will be updated with the location provided by the response
+        and the method will wait until progress completed or progress tracker
+        did timeout.
+
+        User need to manually call ``.refresh()`` when the progress completed
+        to fetch the updated entity.
+
+        A custom ``progress_tracker`` can be passed to override the one
+        provided by session. Progress trackers provide a way to configure
+        timeout, polling interval and reporting callbacks.
+
+        See `pycrunch.progress.DefaultProgressTracking` and
+        `pycrunch.progress.SimpleTextBarProgressTracking` for documentation regarding
+        progress trackers.
+        """
         self.self = URL(r.headers['Location'], '')
         progress_url = r.payload['value']
 
+        if progress_tracker is None:
+            progress_tracker = self.session.progress_tracking
+
+        timeout = progress_tracker.timeout
+        progress_state = progress_tracker.start_progress()
         begin = time.time()
         while timeout is None or time.time() - begin < timeout:
             prog_r = self.session.get(progress_url)
             progress = prog_r.payload['value']
+            progress_tracker.on_progress(progress_state, progress)
             if progress['progress'] == -1:
                 # Completed due to error
                 raise TaskError(progress['message'])
             elif progress['progress'] == 100:
                 # Completed with success
                 break
-            time.sleep(0.5)
+            time.sleep(progress_tracker.interval)
         else:
             # Loop completed due to timeout
             raise TaskProgressTimeoutError(self, r)

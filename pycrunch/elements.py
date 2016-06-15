@@ -26,6 +26,7 @@ import json
 import six
 
 from pycrunch import lemonpy
+from pycrunch.progress import DefaultProgressTracking
 from .version import __version__
 
 omitted = object()
@@ -238,9 +239,14 @@ class ElementSession(lemonpy.Session):
     }
     handler_class = ElementResponseHandler
 
-    def __init__(self, email=None, password=None, token=None, domain=None):
+    def __init__(self, email=None, password=None, token=None, domain=None,
+                 progress_tracking=None):
         self.email = email
         self.password = password
         self.token = token
         self.domain = domain
+        self.progress_tracking = progress_tracking or DefaultProgressTracking()
         super(ElementSession, self).__init__()
+
+
+
