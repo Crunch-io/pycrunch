@@ -2,6 +2,7 @@ language: python
 python:
 - 2.7
 - 3.4
+- 3.5
 sudo: false
 install:
 - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh
@@ -28,4 +29,3 @@ deploy:
   user: jaraco
   password:
     secure: T2rPlwunGoVUW2eWnN46GtzrNchTE3EMKfwlZb3TWBC5vBIQSQJXK518Mo92NeUaMsTBoEjvGyUnnUxCfnadKNRT/2OMFiLG2FqhNhcw/Bb2DyRdZ6GCtd7ScrAwTGSRwyDttKyutA5r/6ac+aZTWie+WPtTsGjvEShNtyN4ECo=
-  distributions: release
