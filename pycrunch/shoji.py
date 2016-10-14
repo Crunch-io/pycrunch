@@ -207,11 +207,11 @@ class Entity(elements.Document):
 
     def wait_progress(self, r, progress_tracker=None):
         self.self = URL(r.headers['Location'], '')
-        wait_progress(r, self.session, progress_tracker)
+        wait_progress(r, self.session, progress_tracker, entity=self)
         return self
 
 
-def wait_progress(r, session, progress_tracker=None):
+def wait_progress(r, session, progress_tracker=None, entity=None):
     """Waits for completion of an Entity from API response that provides progress reporting.
 
     The entity will be updated with the location provided by the response
@@ -250,7 +250,7 @@ def wait_progress(r, session, progress_tracker=None):
         time.sleep(progress_tracker.interval)
     else:
         # Loop completed due to timeout
-        raise TaskProgressTimeoutError(self, r)
+        raise TaskProgressTimeoutError(entity, r)
 
 
 class View(elements.Document):
