@@ -206,48 +206,51 @@ class Entity(elements.Document):
         return super(Entity, self).put(data=entity.json).payload
 
     def wait_progress(self, r, progress_tracker=None):
-        """Waits for completion of an Entity from API response that provides progress reporting.
-
-        The entity will be updated with the location provided by the response
-        and the method will wait until progress completed or progress tracker
-        did timeout.
-
-        User need to manually call ``.refresh()`` when the progress completed
-        to fetch the updated entity.
-
-        A custom ``progress_tracker`` can be passed to override the one
-        provided by session. Progress trackers provide a way to configure
-        timeout, polling interval and reporting callbacks.
-
-        See `pycrunch.progress.DefaultProgressTracking` and
-        `pycrunch.progress.SimpleTextBarProgressTracking` for documentation regarding
-        progress trackers.
-        """
         self.self = URL(r.headers['Location'], '')
-        progress_url = r.payload['value']
-
-        if progress_tracker is None:
-            progress_tracker = self.session.progress_tracking
-
-        timeout = progress_tracker.timeout
-        progress_state = progress_tracker.start_progress()
-        begin = time.time()
-        while timeout is None or time.time() - begin < timeout:
-            prog_r = self.session.get(progress_url)
-            progress = prog_r.payload['value']
-            progress_tracker.on_progress(progress_state, progress)
-            if progress['progress'] == -1:
-                # Completed due to error
-                raise TaskError(progress['message'])
-            elif progress['progress'] == 100:
-                # Completed with success
-                break
-            time.sleep(progress_tracker.interval)
-        else:
-            # Loop completed due to timeout
-            raise TaskProgressTimeoutError(self, r)
-
+        wait_progress(r, self.session, progress_tracker, entity=self)
         return self
+
+
+def wait_progress(r, session, progress_tracker=None, entity=None):
+    """Waits for completion of an Entity from API response that provides progress reporting.
+
+    The entity will be updated with the location provided by the response
+    and the method will wait until progress completed or progress tracker
+    did timeout.
+
+    User need to manually call ``.refresh()`` when the progress completed
+    to fetch the updated entity.
+
+    A custom ``progress_tracker`` can be passed to override the one
+    provided by session. Progress trackers provide a way to configure
+    timeout, polling interval and reporting callbacks.
+
+    See `pycrunch.progress.DefaultProgressTracking` and
+    `pycrunch.progress.SimpleTextBarProgressTracking` for documentation regarding
+    progress trackers.
+    """
+    progress_url = r.payload['value']
+
+    if progress_tracker is None:
+        progress_tracker = session.progress_tracking
+
+    timeout = progress_tracker.timeout
+    progress_state = progress_tracker.start_progress()
+    begin = time.time()
+    while timeout is None or time.time() - begin < timeout:
+        prog_r = session.get(progress_url)
+        progress = prog_r.payload['value']
+        progress_tracker.on_progress(progress_state, progress)
+        if progress['progress'] == -1:
+            # Completed due to error
+            raise TaskError(progress['message'])
+        elif progress['progress'] == 100:
+            # Completed with success
+            break
+        time.sleep(progress_tracker.interval)
+    else:
+        # Loop completed due to timeout
+        raise TaskProgressTimeoutError(entity, r)
 
 
 class View(elements.Document):
