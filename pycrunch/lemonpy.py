@@ -108,6 +108,11 @@ class ResponseHandler(object):
         r.payload = None
         return r
 
+    def status_303(self, r):
+        r.payload = {'message': 'An equivalent entity already exists',
+                     'value': r.headers['Location']}
+        raise ClientError(r)
+
     def status_4xx(self, r):
         self.parse_payload(r)
         raise ClientError(r)
