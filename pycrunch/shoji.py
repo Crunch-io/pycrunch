@@ -120,7 +120,17 @@ class Catalog(elements.Document):
             entity = Entity(self.session)
         elif isinstance(entity, dict) and not isinstance(entity, Entity):
             entity = Entity(self.session, **entity)
-        return self._wait_for_progress(entity, self.post(data=entity.json), progress_tracker)
+
+        response = self.post(data=entity.json)
+        if response.history:
+            # Coming from a redirect
+            seeother = [r for r in response.history if r.status_code == 303]
+            if seeother:
+                # We got a See Other response, this means the resourse
+                # was not created because an equivalent one is already available.
+                entity.self = URL(seeother[-1].headers['Location'], '')
+                raise EquivalentEntityAvailable(entity, seeother[-1])
+        return self._wait_for_progress(entity, response, progress_tracker)
 
     def by(self, attr):
         """Return the Tuples of self.index indexed by the given 'attr' instead.
@@ -319,3 +329,16 @@ class TaskError(ClientError, ServerError):
     @property
     def message(self):
         return self.args[0]
+
+
+class EquivalentEntityAvailable(Exception):
+    """An Entity was not created as an equivalent one is already available.
+
+    The equivalent entity is available as ``self.entity``.
+    """
+    def __init__(self, entity, response):
+        super(EquivalentEntityAvailable, self).__init__(
+            "Entity wasn't created, an equivalent one is already available. See exc.entity"
+        )
+        self.entity = entity
+        self.response = response

@@ -184,7 +184,7 @@ from six.moves import urllib
 from pycrunch import cubes
 from pycrunch import elements
 from pycrunch import shoji
-from pycrunch.shoji import TaskError, TaskProgressTimeoutError
+from pycrunch.shoji import EquivalentEntityAvailable, TaskError, TaskProgressTimeoutError
 from pycrunch import importing
 from pycrunch.lemonpy import ClientError, ServerError, urljoin
 from pycrunch.version import __version__
@@ -195,7 +195,7 @@ __all__ = [
     'cubes',
     'elements',
     'shoji',
-    'TaskError', 'TaskProgressTimeoutError',
+    'EquivalentEntityAvailable', 'TaskError', 'TaskProgressTimeoutError',
     'importing',
     'ClientError', 'ServerError', 'CrunchError'
     'Session',
