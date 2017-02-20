@@ -108,6 +108,10 @@ class ResponseHandler(object):
         r.payload = None
         return r
 
+    def status_303(self, r):
+        self.parse_payload(r)
+        return r
+
     def status_4xx(self, r):
         self.parse_payload(r)
         raise ClientError(r)
