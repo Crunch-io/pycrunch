@@ -3,7 +3,7 @@ import six
 from pycrunch import elements
 
 
-def fetch_cube(dataset, dimensions, weight=None, **measures):
+def fetch_cube(dataset, dimensions, weight=None, filter=None, **measures):
     """Return a shoji.View containing a crunch:cube.
 
     The dataset entity is used to look up its views.cube URL.
@@ -40,9 +40,13 @@ def fetch_cube(dataset, dimensions, weight=None, **measures):
     if weight is not None:
         q['weight'] = weight
 
+    params = {"query": q.json}
+    if filter is not None:
+        params['filter'] = elements.JSONObject(filter).json
+
     return dataset.session.get(
         dataset.views.cube,
-        params={"query": q.json}
+        params=params
     ).payload
 
 
