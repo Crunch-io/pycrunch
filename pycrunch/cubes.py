@@ -10,6 +10,29 @@ def fetch_cube(dataset, dimensions, weight=None, filter=None, **measures):
     The dimensions must be a list of either strings, which are assumed to be
     URL's of variable Entities to be fetched and analyzed according to type,
     or objects, which are assumed to be complete variable expressions.
+    The weight, if sent, should be the URL of a valid weight variable
+    If applying a filter, it should be a filter expression or filter URL.
+
+    >>> dataset = session.site.datasets.by('name')['my dataset'].entity
+    >>> variables = dataset.variables.by('alias')
+    >>> dimensions = [
+    ... {"each": variables['CA'].entity_url},
+    ...     {"variable": variables['CA'].entity_url}
+    ... ]
+    >>> weight = variables['weight_var'].entity_url
+    >>> count = {
+    ...     "function": "cube_count",
+    ...     "args": []
+    ... }
+    >>> filter = {
+    ...     "function": "!=",
+    ...     "args": [
+    ...         {"variable": variables['categorical_var'].entity_url},
+    ...         {"value": 3},
+    ...     ]
+    ... }
+    >>> fetch_cube(dataset, dimensions, weight=weight, filter=filter, count=count)
+
     """
     dims = []
     for d in dimensions:
