@@ -25,6 +25,8 @@ import json
 
 import six
 
+from requests.utils import get_environ_proxies
+
 from pycrunch import lemonpy
 from pycrunch.progress import DefaultProgressTracking
 from .version import __version__
@@ -223,7 +225,8 @@ class ElementResponseHandler(lemonpy.ResponseHandler):
 
         # Repeat the request now that we've logged in. What a hack.
         r.request.headers['Cookie'] = login_r.headers['Set-Cookie']
-        r2 = self.session.send(r.request)
+        env_proxies = get_environ_proxies(r.request.url)
+        r2 = self.session.send(r.request, proxies=env_proxies)
 
         # Add the previous requests to r.history so e.g. cookies get grabbed.
         r2.history.append(r)
