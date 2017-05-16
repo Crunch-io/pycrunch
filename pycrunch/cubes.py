@@ -49,8 +49,8 @@ def fetch_cube(dataset, dimensions, weight=None, filter=None, **measures):
                 rollup_res = v.body.view.get("rollup_resolution", None)
                 dims.append({"function": "rollup", "args": [ref, {"value": rollup_res}]})
             elif v.body.type == "categorical_array":
-                dims.append(ref)
                 dims.append({"each": d})
+                dims.append(ref)
             elif v.body.type == "multiple_response":
                 dims.append({"each": d})
                 dims.append({"function": "as_selected", "args": [ref]})
