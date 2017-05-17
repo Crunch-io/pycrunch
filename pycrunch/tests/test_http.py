@@ -76,6 +76,6 @@ class TestHTTPResponses(TestCase):
         with mock.patch('pycrunch.elements.get_environ_proxies') as gep:
             gep.return_value = {}
             handler.status_401(r)
-        gep.assert_called_once_with(url_401)
+        gep.assert_called_once_with(url_401, no_proxy=None)
         sess.send.assert_called_with(fake_request, proxies={})
 
