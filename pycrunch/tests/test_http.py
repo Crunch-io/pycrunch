@@ -61,3 +61,21 @@ class TestHTTPResponses(TestCase):
         response = exc_info.exception.args[0]
         assert isinstance(response, requests.models.Response)
         self.assertEqual(response.status_code, 504)
+
+    def test_401_handle_calls_proxies(self):
+        sess = Session("not an email", "not a password")
+        sess.post = lambda slf, *args, **kwargs: mock.MagicMock(headers={'Set-Cookie': 'abx'})
+        sess.send = mock.MagicMock()
+        url_401 = 'http://example.com/401'
+        fake_request = mock.MagicMock(url=url_401)
+        r = mock.MagicMock(request=fake_request,
+            json=lambda: {'urls': {'login_url': 'http://www.httpbin.org/post'}})
+
+        from pycrunch.elements import ElementResponseHandler
+        handler = ElementResponseHandler(sess)
+        with mock.patch('pycrunch.elements.get_environ_proxies') as gep:
+            gep.return_value = {}
+            handler.status_401(r)
+        gep.assert_called_once_with(url_401, no_proxy=None)
+        sess.send.assert_called_with(fake_request, proxies={})
+
