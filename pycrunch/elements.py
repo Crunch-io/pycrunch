@@ -225,7 +225,7 @@ class ElementResponseHandler(lemonpy.ResponseHandler):
 
         # Repeat the request now that we've logged in. What a hack.
         r.request.headers['Cookie'] = login_r.headers['Set-Cookie']
-        env_proxies = get_environ_proxies(r.request.url)
+        env_proxies = get_environ_proxies(r.request.url, no_proxy=None)
         r2 = self.session.send(r.request, proxies=env_proxies)
 
         # Add the previous requests to r.history so e.g. cookies get grabbed.
