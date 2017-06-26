@@ -108,6 +108,14 @@ class ResponseHandler(object):
         r.payload = None
         return r
 
+    def status_301(self, r):
+        # Support permanent redirects
+        return r
+
+    def status_302(self, r):
+        # Support redirects
+        return r
+
     def status_303(self, r):
         self.parse_payload(r)
         return r
