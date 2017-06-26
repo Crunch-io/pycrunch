@@ -71,6 +71,10 @@ class ResponseHandler(object):
     def __call__(self, r, *args, **kwargs):
         code = r.status_code
 
+        if code in (301, 302, 303):
+            # Handle redirects.
+            return r
+
         # First, try the specific response status code
         handler = getattr(self, "status_%d" % code, None)
         if handler is not None:
