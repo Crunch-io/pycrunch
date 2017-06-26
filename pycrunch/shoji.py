@@ -126,9 +126,9 @@ class Catalog(elements.Document):
             # Coming from a redirect
             seeother = [r for r in response.history if r.status_code == 303]
             if seeother:
-                # We got a See Other response, this means the resourse
+                # We got a See Other response, this means the resource
                 # was not created because an equivalent one is already available.
-                entity.self = URL(seeother[-1].headers['Location'], '')
+                entity['self'] = URL(seeother[-1].headers['Location'], '')
                 return entity
         return self._wait_for_progress(entity, response, progress_tracker)
 
@@ -175,7 +175,7 @@ class Catalog(elements.Document):
         return self.patch(data=p.json).payload
 
     def _wait_for_progress(self, entity, r, progress_tracker):
-        entity.self = URL(r.headers['Location'], '')
+        entity['self'] = URL(r.headers['Location'], '')
         if r.status_code == 202:
             try:
                 progress_url = r.payload['value']
@@ -216,7 +216,7 @@ class Entity(elements.Document):
         return super(Entity, self).put(data=entity.json).payload
 
     def wait_progress(self, r, progress_tracker=None):
-        self.self = URL(r.headers['Location'], '')
+        self['self'] = URL(r.headers['Location'], '')
         wait_progress(r, self.session, progress_tracker, entity=self)
         return self
 
