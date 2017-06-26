@@ -71,10 +71,6 @@ class ResponseHandler(object):
     def __call__(self, r, *args, **kwargs):
         code = r.status_code
 
-        if code in (301, 302):
-            # Handle redirects.
-            return r
-
         # First, try the specific response status code
         handler = getattr(self, "status_%d" % code, None)
         if handler is not None:
@@ -110,6 +106,14 @@ class ResponseHandler(object):
     def status_204(self, r):
         # TODO: should we warn here if there is a payload?
         r.payload = None
+        return r
+
+    def status_301(self, r):
+        # Support permanent redirects
+        return r
+
+    def status_302(self, r):
+        # Support redirects
         return r
 
     def status_303(self, r):
