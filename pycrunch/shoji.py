@@ -222,7 +222,7 @@ class Entity(elements.Document):
 
 
 def wait_progress(r, session, progress_tracker=None, entity=None):
-    """Waits for completion of an Entity from API response that provides progress reporting.
+    """Waits for completion of an Entity or View from API response that provides progress reporting.
 
     The entity will be updated with the location provided by the response
     and the method will wait until progress completed or progress tracker
@@ -282,6 +282,11 @@ class View(elements.Document):
         """Update the View with the new value."""
         self['value'] = newvalue
         super(View, self).put(data=self.json)
+
+    def wait_progress(self, r, progress_tracker=None):
+        self['self'] = URL(r.headers['Location'], '')
+        wait_progress(r, self.session, progress_tracker, entity=self)
+        return self
 
 
 class Order(elements.Document):
