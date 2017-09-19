@@ -260,7 +260,7 @@ def wait_progress(r, session, progress_tracker=None, entity=None):
         time.sleep(progress_tracker.interval)
     else:
         # Loop completed due to timeout
-        raise TaskProgressTimeoutError(entity, r)
+        raise TaskProgressTimeoutError(entity, r, timeout=timeout)
 
 
 class View(elements.Document):
@@ -311,11 +311,13 @@ class Order(elements.Document):
 
 
 class TaskProgressTimeoutError(Exception):
-    def __init__(self, entity, response):
+    def __init__(self, entity, response, timeout=''):
+        if timeout:
+            timeout = '%s seconds ' % (timeout, )
         super(TaskProgressTimeoutError, self).__init__(
-            'Task Progress did not complete before timeout. '
+            'Task Progress did not complete before {}timeout. '
             'Trap this exception and call exc.entity.wait_progress(exc.response) '
-            'to wait for completion explicitly.'
+            'to wait for completion explicitly.'.format(timeout)
         )
         self.entity = entity
         self.response = response
