@@ -1,2 +1,10 @@
+graft pycrunch
+
 include README.md
-include version.txt
+include COPYING COPYING.LESSER
+include LICENSE
+
+include .coveragerc
+include tox.ini .travis.yml
+
+recursive-exclude * __pycache__ *.py[cod]
