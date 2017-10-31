@@ -8,7 +8,7 @@ from setuptools import setup, find_packages
 
 thisdir = os.path.abspath(os.path.dirname(__file__))
 
-with open(os.path.join(thisdir, 'pycrunch', 'version.py')) as v_file:
+with open(os.path.join(thisdir, 'src', 'pycrunch', 'version.py')) as v_file:
     VERSION = re.compile(
         r".*__version__ = '(.*?)'",
         re.S).match(v_file.read()).group(1)
