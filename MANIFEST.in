@@ -1,4 +1,5 @@
-graft pycrunch
+graft src
+graft tests
 
 include README.md
 include COPYING COPYING.LESSER
