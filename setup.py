@@ -47,11 +47,9 @@ setup_params = dict(
     license='LGPL',
     install_requires=requires,
     tests_require=tests_requires,
-    packages=find_packages(),
+    packages=find_packages('src', exclude=['tests']),
+    package_dir={'': 'src'},
     include_package_data=True,
-    package_data={
-        'pycrunch': ['*.json', '*.csv']
-    },
     extras_require={
         'pandas': ['pandas'],
         'testing': tests_requires,
