@@ -43,4 +43,4 @@ nosetests.xml
 #Wing
 *.wpr
 *.wpu
-
+.cache/
