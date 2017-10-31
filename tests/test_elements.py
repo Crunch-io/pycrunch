@@ -18,7 +18,7 @@ class TestJSONObject(TestCase):
 
     def test_str(self):
         foo = self.Foo(bar=42)
-        expected = 'pycrunch.tests.test_elements.Foo(**{\n    "bar": 42\n})'
+        expected = 'tests.test_elements.Foo(**{\n    "bar": 42\n})'
         self.assertEqual(str(foo), expected)
 
     def test_attribute_access(self):
