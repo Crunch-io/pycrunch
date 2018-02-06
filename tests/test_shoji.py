@@ -2,7 +2,7 @@
 import json
 
 import mock
-from urlparse import urljoin
+from six.moves.urllib_parse import urljoin
 from unittest import TestCase
 
 import sys
