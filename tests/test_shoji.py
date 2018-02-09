@@ -207,17 +207,20 @@ class TestIndex(TestCase):
                 },
                 ent_2_url: {
                     'name': '02'
-                },
-                '03/': {  # This has another way of being valid relative
-                    'name': '03'
-                },
-                '../catalog/04/': {  # Yet way of being valid relative
-                    'name': '04'
-                },
+                }
             }
         }
 
         index = Index(session, base_url, **payload['index'])
+        # Continue growing the index using other ways, __setitem__ and .update
+        index['03/'] = {  # This has another way of being valid relative
+            'name': '03'
+        }
+        index.update({
+            '../catalog/04/': {  # Yet way of being valid relative
+                  'name': '04'
+              }
+        })
 
         self.assertTrue(index[ent_1_url].entity['full_entity'])
         self.assertEqual(index[ent_1_url].entity['name'], 'Ent 01')

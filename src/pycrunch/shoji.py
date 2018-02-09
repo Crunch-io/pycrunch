@@ -88,25 +88,39 @@ class Index(elements.JSONObject):
         self.normalized_keys = normalized_keys
         elements.JSONObject.__init__(self, **members)
 
+    def _rel_abs(self, url):
+        if not hasattr(url, 'relative_to'):
+            cat_url = self.catalog_url
+            if '://' in url:
+                abs_url = URL(url, cat_url)
+            else:
+                abs_url = URL(URL(url, cat_url).absolute, cat_url)
+            rel_url = abs_url.relative_to(cat_url)
+        else:
+            abs_url = url.absolute
+            rel_url = url.relative_to(self.catalog_url)
+        return rel_url, abs_url
+
     def __getitem__(self, item):
         """
         We will always convert the received key to a relative URL using
         URL.relative_to so we can use self.normalized_keys to know which
         URL the user sent to key this tuple by.
         """
-        if not hasattr(item, "relative_to"):
-            cat_url = self.catalog_url
-            if '://' in item:
-                # We have an absolute URL
-                abs_url = URL(item, cat_url)
-            else:
-                # We have a relative URL, but we don't know relative to what
-                abs_url = URL(URL(item, cat_url).absolute, cat_url)
-            rel_url = abs_url.relative_to(cat_url)
-        else:
-            rel_url = item.relative_to(self.catalog_url)
+        rel_url, abs_url = self._rel_abs(item)
         key = self.normalized_keys[rel_url]
         return super(Index, self).__getitem__(key)
+
+    def __setitem__(self, key, value):
+        rel_url, abs_url = self._rel_abs(key)
+        if isinstance(value, dict):
+            value = Tuple(self.session, abs_url, **value)
+        self.normalized_keys[rel_url] = key
+        return super(Index, self).__setitem__(key, value)
+
+    def update(self, mapping):
+        for k, v in mapping.items():
+            self[k] = v  # To go through __setitem__'s logic
 
 
 class Catalog(elements.Document):
