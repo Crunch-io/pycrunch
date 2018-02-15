@@ -70,15 +70,57 @@ class Index(elements.JSONObject):
         self.catalog_url = catalog_url
         catalog_url_absolute, frag = urllib.parse.urldefrag(catalog_url.absolute)
 
+        # Normalized keys stores a dictionary of shortest relative URLs
+        # obtained via URL.relative_to that maps to the arbitrary URL relative
+        # or absolute that the client submitted. We can use this to always
+        # key the tuples by relative URL regardless of what kind of URL the
+        # user asks to fetch an item by.
+        normalized_keys = {}
         for entity_url, tup in six.iteritems(members):
             if tup is not None:
                 url = entity_url
                 if not hasattr(url, "relative_to"):  # Faster than isinstance(url, URL)
                     url = URL(url, catalog_url_absolute)
 
-                members[entity_url] = Tuple(session, url, **tup)
+                members[url] = Tuple(session, url, **tup)
+                normalized_keys[url.relative_to(catalog_url)] = url
 
+        self.normalized_keys = normalized_keys
         elements.JSONObject.__init__(self, **members)
+
+    def _rel_abs(self, url):
+        if not hasattr(url, 'relative_to'):
+            cat_url = self.catalog_url
+            if '://' in url:
+                abs_url = URL(url, cat_url)
+            else:
+                abs_url = URL(URL(url, cat_url).absolute, cat_url)
+            rel_url = abs_url.relative_to(cat_url)
+        else:
+            abs_url = url.absolute
+            rel_url = url.relative_to(self.catalog_url)
+        return rel_url, abs_url
+
+    def __getitem__(self, item):
+        """
+        We will always convert the received key to a relative URL using
+        URL.relative_to so we can use self.normalized_keys to know which
+        URL the user sent to key this tuple by.
+        """
+        rel_url, abs_url = self._rel_abs(item)
+        key = self.normalized_keys[rel_url]
+        return super(Index, self).__getitem__(key)
+
+    def __setitem__(self, key, value):
+        rel_url, abs_url = self._rel_abs(key)
+        if isinstance(value, dict):
+            value = Tuple(self.session, abs_url, **value)
+        self.normalized_keys[rel_url] = key
+        return super(Index, self).__setitem__(key, value)
+
+    def update(self, mapping):
+        for k, v in mapping.items():
+            self[k] = v  # To go through __setitem__'s logic
 
 
 class Catalog(elements.Document):

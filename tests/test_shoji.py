@@ -2,13 +2,15 @@
 import json
 
 import mock
+from six.moves.urllib_parse import urljoin
 from unittest import TestCase
 
 import sys
 from requests import Response
 
 from pycrunch.progress import DefaultProgressTracking, SimpleTextBarProgressTracking
-from pycrunch.shoji import Catalog, TaskProgressTimeoutError, TaskError
+from pycrunch.shoji import Catalog, TaskProgressTimeoutError, TaskError, Index
+from pycrunch.lemonpy import URL
 
 
 class TestShojiCreation(TestCase):
@@ -135,3 +137,130 @@ class TestShojiCreation(TestCase):
         # Check we printed the progressbar up to 100%.
         self.assertEqual(''.join(FakeStdout.writes).count('-'),
                          SimpleTextBarProgressTracking.BAR_WIDTH)
+
+
+class TestIndex(TestCase):
+    def test_relative_access(self):
+        base_url = URL('http://host.name/base/url/', None)
+        session = mock.MagicMock()
+
+        rel_url = '../folder/item/'
+        abs_url = URL(rel_url, base_url).absolute
+
+        tup = {'id': 1}  # Some arbitrary value
+
+        rel_index = Index(session, base_url, **{
+            rel_url: tup
+        })
+        abs_index = Index(session, base_url, **{
+            abs_url: tup
+        })
+
+        abs_on_rel = rel_index[abs_url]
+        rel_on_abs = abs_index[rel_url]
+
+        self.assertEqual(abs_on_rel, rel_on_abs)
+        self.assertEqual(abs_on_rel, tup)
+        self.assertEqual(rel_on_abs, tup)
+
+    def test_catalog_follow_entity(self):
+        base_url = URL('http://host.name/catalog/', None)
+
+        ent_1_url = urljoin(base_url, '01/')
+        ent_2_url = urljoin(base_url, '02/')
+        ent_3_url = urljoin(base_url, '03/')
+        ent_4_url = urljoin(base_url, '04/')
+        entities = {
+            ent_1_url: {
+                'full_entity': True,
+                'name': 'Ent 01'
+            },
+            ent_2_url: {
+                'full_entity': True,
+                'name': 'Ent 02'
+            },
+            ent_3_url: {
+                'full_entity': True,
+                'name': 'Ent 03'
+            },
+            ent_4_url: {
+                'full_entity': True,
+                'name': 'Ent 04'
+            }
+        }
+
+        fetches = []
+        def _get(ent_url, *args, **kwargs):
+            fetches.append((ent_url, args, kwargs))
+            resp = mock.Mock(payload=entities[ent_url])
+            return resp
+
+        session = mock.MagicMock()
+        session.get = _get
+        payload = {
+            'element': 'shoji:catalog',
+            'self': base_url,
+            # This index has mixed urls as kes
+            'index': {
+                './01/': {
+                    'name': '01'
+                },
+                ent_2_url: {
+                    'name': '02'
+                }
+            }
+        }
+
+        index = Index(session, base_url, **payload['index'])
+        # Continue growing the index using other ways, __setitem__ and .update
+        index['03/'] = {  # This has another way of being valid relative
+            'name': '03'
+        }
+        index.update({
+            '../catalog/04/': {  # Yet way of being valid relative
+                  'name': '04'
+              }
+        })
+
+        self.assertTrue(index[ent_1_url].entity['full_entity'])
+        self.assertEqual(index[ent_1_url].entity['name'], 'Ent 01')
+        self.assertTrue(index['01/'].entity['full_entity'])
+        self.assertEqual(index['01/'].entity['name'], 'Ent 01')
+        self.assertTrue(index['./01/'].entity['full_entity'])
+        self.assertEqual(index['./01/'].entity['name'], 'Ent 01')
+        self.assertTrue(index['../catalog/01/'].entity['full_entity'])
+        self.assertEqual(index['../catalog/01/'].entity['name'], 'Ent 01')
+        
+        self.assertTrue(index[ent_2_url].entity['full_entity'])
+        self.assertEqual(index[ent_2_url].entity['name'], 'Ent 02')
+        self.assertTrue(index['02/'].entity['full_entity'])
+        self.assertEqual(index['02/'].entity['name'], 'Ent 02')
+        self.assertTrue(index['./02/'].entity['full_entity'])
+        self.assertEqual(index['./02/'].entity['name'], 'Ent 02')
+        self.assertTrue(index['../catalog/02/'].entity['full_entity'])
+        self.assertEqual(index['../catalog/02/'].entity['name'], 'Ent 02')
+        
+        self.assertTrue(index[ent_3_url].entity['full_entity'])
+        self.assertEqual(index[ent_3_url].entity['name'], 'Ent 03')
+        self.assertTrue(index['03/'].entity['full_entity'])
+        self.assertEqual(index['03/'].entity['name'], 'Ent 03')
+        self.assertTrue(index['./03/'].entity['full_entity'])
+        self.assertEqual(index['./03/'].entity['name'], 'Ent 03')
+        self.assertTrue(index['../catalog/03/'].entity['full_entity'])
+        self.assertEqual(index['../catalog/03/'].entity['name'], 'Ent 03')
+        
+        self.assertTrue(index[ent_4_url].entity['full_entity'])
+        self.assertEqual(index[ent_4_url].entity['name'], 'Ent 04')
+        self.assertTrue(index['04/'].entity['full_entity'])
+        self.assertEqual(index['04/'].entity['name'], 'Ent 04')
+        self.assertTrue(index['./04/'].entity['full_entity'])
+        self.assertEqual(index['./04/'].entity['name'], 'Ent 04')
+        self.assertTrue(index['../catalog/04/'].entity['full_entity'])
+        self.assertEqual(index['../catalog/04/'].entity['name'], 'Ent 04')
+
+        self.assertEqual(fetches, [
+            (ent_1_url, (), {}),
+            (ent_2_url, (), {}),
+            (ent_3_url, (), {}),
+            (ent_4_url, (), {}),
+        ])
