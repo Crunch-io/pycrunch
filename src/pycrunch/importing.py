@@ -74,7 +74,7 @@ class Importer(object):
 
         return new_source_url
 
-    def create_batch_from_source(self, ds, source_url, workflow=None, async=False,
+    def create_batch_from_source(self, ds, source_url, workflow=None,
                                  savepoint=True, autorollback=True):
         """Create and return a Batch on the given dataset for the given source."""
         batch = shoji.Entity(ds.session, body={
