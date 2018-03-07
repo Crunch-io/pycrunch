@@ -234,7 +234,7 @@ class Catalog(elements.Document):
 class Entity(elements.Document):
 
     element = "shoji:entity"
-    navigation_collections = ("catalogs", "fragments", "views", "urls")
+    navigation_collections = ("catalogs", "fragments", "views", "urls", 'orders')
 
     def __init__(__this__, session, **members):
         members.setdefault("body", {})
