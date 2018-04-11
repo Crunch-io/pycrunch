@@ -160,7 +160,7 @@ class Catalog(elements.Document):
         """
         if entity is None:
             entity = Entity(self.session)
-        elif isinstance(entity, dict) and not isinstance(entity, Entity):
+        elif isinstance(entity, dict) and not isinstance(entity, elements.Document):
             entity = Entity(self.session, **entity)
 
         response = self.post(data=entity.json)
