@@ -138,6 +138,22 @@ class TestShojiCreation(TestCase):
         self.assertEqual(''.join(FakeStdout.writes).count('-'),
                          SimpleTextBarProgressTracking.BAR_WIDTH)
 
+    def test_accepts_document_instance(self):
+        sess = mock.MagicMock()
+        location = 'http://host.com/somewhere'
+        sess.post = mock.MagicMock(return_value=self._mkresp(
+            status_code=201,
+            headers={'Location': location}
+        ))
+        catalog = Catalog(self='http://host.com/catalog', session=sess)
+        body = {
+            "name": 'subcatalog'
+        }
+        sub_catalog = Catalog(session=sess, body=body)
+        retval = catalog.create(sub_catalog)
+        self.assertEqual(retval.self, location)
+        self.assertEqual(retval.body, body)
+
 
 class TestIndex(TestCase):
     def test_relative_access(self):
