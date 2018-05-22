@@ -33,6 +33,7 @@ tests_requires = [
 
 setup_params = dict(
     name='pycrunch',
+    python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*',
     version=VERSION,
     description="Crunch.io Client Library",
     long_description=get_long_desc(),
