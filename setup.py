@@ -27,13 +27,13 @@ requires = [
 
 tests_requires = [
     'mock',
-    'pandas',
     'pytest',
     'pytest-cov',
 ]
 
 setup_params = dict(
     name='pycrunch',
+    python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*',
     version=VERSION,
     description="Crunch.io Client Library",
     long_description=get_long_desc(),
@@ -51,7 +51,10 @@ setup_params = dict(
     package_dir={'': 'src'},
     include_package_data=True,
     extras_require={
-        'pandas': ['pandas'],
+        'pandas:python_version=="3.4"': ['pandas~=0.19.0'],
+        'pandas:python_version=="2.7" or python_version>="3.5"': ['pandas'],
+        'testing:python_version=="3.4"': ['pandas~=0.19.0'],
+        'testing:python_version=="2.7" or python_version>="3.5"': ['pandas'],
         'testing': tests_requires,
     },
     zip_safe=True,
