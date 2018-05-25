@@ -334,7 +334,7 @@ class View(elements.Document):
 class Order(elements.Document):
 
     element = "shoji:order"
-    navigation_collections = ()
+    navigation_collections = ("catalogs",)
 
     def __init__(__this__, session, **members):
         if 'self' in members and not isinstance(members['self'], URL):
