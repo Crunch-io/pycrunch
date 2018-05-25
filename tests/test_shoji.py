@@ -9,7 +9,7 @@ import sys
 from requests import Response
 
 from pycrunch.progress import DefaultProgressTracking, SimpleTextBarProgressTracking
-from pycrunch.shoji import Catalog, TaskProgressTimeoutError, TaskError, Index
+from pycrunch.shoji import Catalog, TaskProgressTimeoutError, TaskError, Index, Order
 from pycrunch.lemonpy import URL
 
 
@@ -280,3 +280,20 @@ class TestIndex(TestCase):
             (ent_3_url, (), {}),
             (ent_4_url, (), {}),
         ])
+
+
+class TestOrders(TestCase):
+    def test_follows_catalogs(self):
+        catal_url = '/catalog/url/'
+        session = mock.Mock(**{
+            'get': lambda x: mock.Mock(**{'payload.self': catal_url})
+        })
+
+        order = Order(session, **{
+            'graph': [],
+            'catalogs': {
+                'follow_me': catal_url
+            }
+        })
+        self.assertEqual(order.follow_me.self, catal_url)
+
