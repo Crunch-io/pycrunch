@@ -216,7 +216,7 @@ class CrunchTable(elements.Document):
 session = None
 
 
-def connect(user, pw, site_url="https://app.crunch.io/api/", progress_tracking=None):
+def connect(user, pw, site_url="https://app.crunch.io/api/", progress_tracking=None, session_class=Session):
     """
     Log in to Crunch with a user/pw; return the top-level Site payload.  Using
     this or the other connect method (the first time only) stores a reference
@@ -225,13 +225,13 @@ def connect(user, pw, site_url="https://app.crunch.io/api/", progress_tracking=N
     Returns the API Root Entity, or errors if unable to connect.
     """
     global session
-    ret = Session(user, pw, progress_tracking=progress_tracking).get(site_url).payload
+    ret = session_class(user, pw, progress_tracking=progress_tracking).get(site_url).payload
     if session is None:
         session = ret
     return ret
 
 
-def connect_with_token(token, site_url="https://us.crunch.io/api/", progress_tracking=None):
+def connect_with_token(token, site_url="https://us.crunch.io/api/", progress_tracking=None, session_class=Session):
     """
     Log in to Crunch with a token; return the top-level Site payload. Using
     this or the other connect method (the first time only) stores a reference
@@ -240,7 +240,7 @@ def connect_with_token(token, site_url="https://us.crunch.io/api/", progress_tra
     Returns the API Root Entity, or errors if unable to connect.
     """
     global session
-    ret = Session(
+    ret = session_class(
         token=token,
         domain=urllib.parse.urlparse(site_url).netloc,
         progress_tracking=progress_tracking
@@ -255,7 +255,7 @@ def get_dataset(dataset_name_or_id, site=None):
     Retrieve a reference to a given dataset (either by name, or ID) if it exists.
     This method uses the library singleton session if the optional "site"
     parameter is not provided.
-    
+
     Returns a Dataset Entity record if the dataset exsists.
     Raises a KeyError if no such dataset exists.
     """
