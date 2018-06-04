@@ -1,0 +1,3 @@
+pip install -U pip wheel twine
+python setup.py sdist bdist_wheel
+twine upload dist/pycrunch-*.whl dist/pycrunch-*.tar.gz
