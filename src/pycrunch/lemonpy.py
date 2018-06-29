@@ -165,6 +165,7 @@ class Session(requests.Session):
         super(Session, self).__init__()
 
         self.headers.update(self.__class__.headers)
+        self.proxies = urllib.request.getproxies()
 
         if self.token:
             domain = self.domain or 'local.crunch.io'
