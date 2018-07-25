@@ -8,7 +8,8 @@ def load_ipython_extension(ipython):
     # token = ipython.config['InteractiveShellApp'].crunch_token
     # or
     # token = os.environ.get("CRUNCH_TOKEN", None)
-    ipython.ns_table["builtin"]["dataframe_from_dataset"] = pandaslib.dataframe_from_dataset
+    dataframe = pandaslib.dataframe_from_dataset
+    ipython.ns_table["builtin"]["dataframe_from_dataset"] = dataframe
 
     # TODO: do we want any magic?
     # ipython.register_magic_function(
