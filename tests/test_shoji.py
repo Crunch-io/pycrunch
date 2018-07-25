@@ -9,7 +9,7 @@ import sys
 from requests import Response
 
 from pycrunch.progress import DefaultProgressTracking, SimpleTextBarProgressTracking
-from pycrunch.shoji import Catalog, TaskProgressTimeoutError, TaskError, Index, Order
+from pycrunch.shoji import Catalog, TaskProgressTimeoutError, TaskError, Index, Order, Entity
 from pycrunch.lemonpy import URL
 
 
@@ -246,7 +246,7 @@ class TestIndex(TestCase):
         self.assertEqual(index['./01/'].entity['name'], 'Ent 01')
         self.assertTrue(index['../catalog/01/'].entity['full_entity'])
         self.assertEqual(index['../catalog/01/'].entity['name'], 'Ent 01')
-        
+
         self.assertTrue(index[ent_2_url].entity['full_entity'])
         self.assertEqual(index[ent_2_url].entity['name'], 'Ent 02')
         self.assertTrue(index['02/'].entity['full_entity'])
@@ -255,7 +255,7 @@ class TestIndex(TestCase):
         self.assertEqual(index['./02/'].entity['name'], 'Ent 02')
         self.assertTrue(index['../catalog/02/'].entity['full_entity'])
         self.assertEqual(index['../catalog/02/'].entity['name'], 'Ent 02')
-        
+
         self.assertTrue(index[ent_3_url].entity['full_entity'])
         self.assertEqual(index[ent_3_url].entity['name'], 'Ent 03')
         self.assertTrue(index['03/'].entity['full_entity'])
@@ -264,7 +264,7 @@ class TestIndex(TestCase):
         self.assertEqual(index['./03/'].entity['name'], 'Ent 03')
         self.assertTrue(index['../catalog/03/'].entity['full_entity'])
         self.assertEqual(index['../catalog/03/'].entity['name'], 'Ent 03')
-        
+
         self.assertTrue(index[ent_4_url].entity['full_entity'])
         self.assertEqual(index[ent_4_url].entity['name'], 'Ent 04')
         self.assertTrue(index['04/'].entity['full_entity'])
@@ -296,4 +296,25 @@ class TestOrders(TestCase):
             }
         })
         self.assertEqual(order.follow_me.self, catal_url)
+
+
+class TestEntities(TestCase):
+    def test_entities_can_have_index(self):
+        ent_url = '/entity/url/'
+        session = mock.Mock(**{
+            'get': lambda x: mock.Mock(**{'payload.self': catal_url})
+        })
+        body = {
+            'attr': 'val'
+        }
+        index = {
+            'url/': {'key': 'val'}
+        }
+        ent = Entity(session, **{
+            'self': ent_url,
+            'body': body,
+            'index': index
+        })
+        self.assertTrue(isinstance(ent.index, Index))
+
 

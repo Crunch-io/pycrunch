@@ -242,6 +242,8 @@ class Entity(elements.Document):
             if not isinstance(members['self'], URL):
                 members['self'] = URL(members['self'], "")
             members['body'] = Tuple(session, members['self'], **members['body'])
+            if 'index' in members:
+                members['index'] = Index(session, members['self'], **members['index'])
         super(Entity, __this__).__init__(session, **members)
 
     def edit(self, **body_attrs):
