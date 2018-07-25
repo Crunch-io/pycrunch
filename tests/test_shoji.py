@@ -311,9 +311,7 @@ class TestOrders(TestCase):
 class TestEntities(TestCase):
     def test_entities_can_have_index(self):
         ent_url = '/entity/url/'
-        session = mock.Mock(**{
-            'get': lambda x: mock.Mock(**{'payload.self': catal_url})
-        })
+        session = mock.Mock()
         body = {
             'attr': 'val'
         }
