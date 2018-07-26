@@ -57,7 +57,8 @@ def fetch_cube(dataset, dimensions, weight=None, filter=None, **measures):
             else:
                 dims.append(ref)
         else:
-            raise TypeError("dimensions must be URL strings or Crunch expression objects.")
+            msg = "dimensions must be URL strings or Crunch expression objects."
+            raise TypeError(msg)
 
     q = elements.JSONObject(dimensions=dims, measures=measures)
     if weight is not None:
@@ -81,6 +82,8 @@ class Cube(elements.Element):
 
 def count(*args):
     return {"function": "cube_count", "args": list(args)}
+
+
 count.result = lambda data, n_missing: {
     "data": data,
     "n_missing": n_missing,

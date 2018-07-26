@@ -20,8 +20,8 @@ def export_dataset(dataset, options, format='csv', progress_tracker=None):
     dest_file = URL(r.headers['Location'], '')
     if r.status_code == 202:
         try:
-            progress_url = r.payload['value']
-        except:
+            progress_url = r.payload['value']  # noqa
+        except Exception:
             # Not a progress API just return the incomplete entity.
             # User will refresh it.
             pass
@@ -29,4 +29,3 @@ def export_dataset(dataset, options, format='csv', progress_tracker=None):
             # We have a progress_url, wait for completion
             wait_progress(r, session, progress_tracker)
     return dest_file
-

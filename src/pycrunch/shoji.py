@@ -220,8 +220,8 @@ class Catalog(elements.Document):
         entity['self'] = URL(r.headers['Location'], '')
         if r.status_code == 202:
             try:
-                progress_url = r.payload['value']
-            except:
+                progress_url = r.payload['value']  # noqa
+            except Exception:
                 # Not a progress API just return the incomplete entity.
                 # User will refresh it.
                 pass
@@ -266,7 +266,8 @@ class Entity(elements.Document):
 
 
 def wait_progress(r, session, progress_tracker=None, entity=None):
-    """Waits for completion of an Entity or View from API response that provides progress reporting.
+    """Waits for completion of an Entity or View from API response
+    that provides progress reporting.
 
     The entity will be updated with the location provided by the response
     and the method will wait until progress completed or progress tracker
@@ -280,8 +281,8 @@ def wait_progress(r, session, progress_tracker=None, entity=None):
     timeout, polling interval and reporting callbacks.
 
     See `pycrunch.progress.DefaultProgressTracking` and
-    `pycrunch.progress.SimpleTextBarProgressTracking` for documentation regarding
-    progress trackers.
+    `pycrunch.progress.SimpleTextBarProgressTracking` for documentation
+    regarding progress trackers.
     """
     progress_url = r.payload['value']
 
