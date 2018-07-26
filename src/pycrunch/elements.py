@@ -250,6 +250,3 @@ class ElementSession(lemonpy.Session):
         self.domain = domain
         self.progress_tracking = progress_tracking or DefaultProgressTracking()
         super(ElementSession, self).__init__()
-
-
-
