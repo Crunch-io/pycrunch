@@ -123,19 +123,7 @@ class Index(elements.JSONObject):
             self[k] = v  # To go through __setitem__'s logic
 
 
-class Catalog(elements.Document):
-    """A Shoji Catalog."""
-
-    element = "shoji:catalog"
-    navigation_collections = ("catalogs", "orders", "views", "urls")
-
-    def __init__(__this__, session, **members):
-        if 'self' in members:
-            if not isinstance(members['self'], URL):
-                members['self'] = URL(members['self'], "")
-            if 'index' in members:
-                members['index'] = Index(session, members['self'], **members['index'])
-        super(Catalog, __this__).__init__(session, **members)
+class CreateMixin(object):
 
     def create(self, entity=None, progress_tracker=None):
         """POST the given Entity to this catalog to create a new resource.
@@ -173,6 +161,35 @@ class Catalog(elements.Document):
                 entity['self'] = URL(seeother[-1].headers['Location'], '')
                 return entity
         return self._wait_for_progress(entity, response, progress_tracker)
+
+    def _wait_for_progress(self, entity, r, progress_tracker):
+        entity['self'] = URL(r.headers['Location'], '')
+        if r.status_code == 202:
+            try:
+                progress_url = r.payload['value']  # noqa
+            except Exception:
+                # Not a progress API just return the incomplete entity.
+                # User will refresh it.
+                pass
+            else:
+                # We have a progress_url, wait for completion
+                entity.wait_progress(r, progress_tracker)
+        return entity
+
+
+class Catalog(elements.Document, CreateMixin):
+    """A Shoji Catalog."""
+
+    element = "shoji:catalog"
+    navigation_collections = ("catalogs", "orders", "views", "urls")
+
+    def __init__(__this__, session, **members):
+        if 'self' in members:
+            if not isinstance(members['self'], URL):
+                members['self'] = URL(members['self'], "")
+            if 'index' in members:
+                members['index'] = Index(session, members['self'], **members['index'])
+        super(Catalog, __this__).__init__(session, **members)
 
     def by(self, attr):
         """Return the Tuples of self.index indexed by the given 'attr' instead.
@@ -216,22 +233,8 @@ class Catalog(elements.Document):
         p = self.__class__(self.session, self=self.self, index={entity_url: None})
         return self.patch(data=p.json).payload
 
-    def _wait_for_progress(self, entity, r, progress_tracker):
-        entity['self'] = URL(r.headers['Location'], '')
-        if r.status_code == 202:
-            try:
-                progress_url = r.payload['value']  # noqa
-            except Exception:
-                # Not a progress API just return the incomplete entity.
-                # User will refresh it.
-                pass
-            else:
-                # We have a progress_url, wait for completion
-                entity.wait_progress(r, progress_tracker)
-        return entity
 
-
-class Entity(elements.Document):
+class Entity(elements.Document, CreateMixin):
 
     element = "shoji:entity"
     navigation_collections = ("catalogs", "fragments", "views", "urls", 'orders')
