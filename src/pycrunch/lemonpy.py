@@ -4,6 +4,7 @@ import logging
 
 import six
 from six.moves import urllib
+from six.moves.http_cookiejar import Cookie
 
 import requests
 
@@ -128,7 +129,6 @@ class ResponseHandler(object):
         self.parse_payload(r)
         raise ServerError(r)
 
-from six.moves.http_cookiejar import Cookie
 
 def make_cookie(name, value, domain):
     '''
@@ -207,5 +207,6 @@ class URL(str):
         new_path = (['..'] * len(base_path)) + new_path
         new_path = '/'.join(new_path)
 
-        return urllib.parse.urlunparse(("", "", new_path,
-                                    new.params, new.query, new.fragment))
+        return urllib.parse.urlunparse(
+            ("", "", new_path, new.params, new.query, new.fragment)
+        )

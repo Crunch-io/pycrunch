@@ -118,21 +118,30 @@ class TestShojiCreation(TestCase):
             payload={"value": 'http://host.com/progress/1'}
         ))
         sess.get = mock.MagicMock(side_effect=[
-            self._mkresp(status_code=200, payload={'value': {'progress': i*10}}) for i in range(11)
+            self._mkresp(
+                status_code=200,
+                payload={'value': {'progress': i * 10}}
+            ) for i in range(11)
         ])
 
         c = Catalog(self='http://host.com/catalog', session=sess)
 
         class FakeStdout(object):
             writes = []
+
             def write(self, text):
                 self.writes.append(text)
+
             def flush(self):
                 pass
 
         with mock.patch.object(sys, 'stdout', FakeStdout()):
-            c.create({'somedata': 1}, progress_tracker=SimpleTextBarProgressTracking(timeout=None,
-                                                                                     interval=0.1))
+            c.create(
+                {'somedata': 1},
+                progress_tracker=SimpleTextBarProgressTracking(
+                    timeout=None, interval=0.1
+                )
+            )
 
         # Check we printed the progressbar up to 100%.
         self.assertEqual(''.join(FakeStdout.writes).count('-'),
@@ -206,6 +215,7 @@ class TestIndex(TestCase):
         }
 
         fetches = []
+
         def _get(ent_url, *args, **kwargs):
             fetches.append((ent_url, args, kwargs))
             resp = mock.Mock(payload=entities[ent_url])
@@ -234,8 +244,8 @@ class TestIndex(TestCase):
         }
         index.update({
             '../catalog/04/': {  # Yet way of being valid relative
-                  'name': '04'
-              }
+                'name': '04'
+            }
         })
 
         self.assertTrue(index[ent_1_url].entity['full_entity'])
@@ -301,9 +311,7 @@ class TestOrders(TestCase):
 class TestEntities(TestCase):
     def test_entities_can_have_index(self):
         ent_url = '/entity/url/'
-        session = mock.Mock(**{
-            'get': lambda x: mock.Mock(**{'payload.self': catal_url})
-        })
+        session = mock.Mock()
         body = {
             'attr': 'val'
         }
@@ -316,5 +324,3 @@ class TestEntities(TestCase):
             'index': index
         })
         self.assertTrue(isinstance(ent.index, Index))
-
-

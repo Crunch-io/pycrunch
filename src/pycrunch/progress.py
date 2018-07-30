@@ -24,7 +24,8 @@ class DefaultProgressTracking(_ProgressTrackingConfig):
     Waits for 30 seconds, polls every 0.5 seconds and
     does not report progress in any way.
     """
-    def __init__(self, timeout=DEFAULT_PROGRESS_TIMEOUT, interval=DEFAULT_PROGRESS_INTERVAL):
+    def __init__(self, timeout=DEFAULT_PROGRESS_TIMEOUT,
+                 interval=DEFAULT_PROGRESS_INTERVAL):
         super(DefaultProgressTracking, self).__init__(timeout, interval)
 
     def start_progress(self):
@@ -62,4 +63,3 @@ class SimpleTextBarProgressTracking(DefaultProgressTracking):
 
         if progress['progress'] == 100:
             sys.stdout.write("\n")
-
