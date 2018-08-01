@@ -176,21 +176,6 @@ class CreateMixin(object):
                 entity.wait_progress(r, progress_tracker)
         return entity
 
-
-class Catalog(elements.Document, CreateMixin):
-    """A Shoji Catalog."""
-
-    element = "shoji:catalog"
-    navigation_collections = ("catalogs", "orders", "views", "urls")
-
-    def __init__(__this__, session, **members):
-        if 'self' in members:
-            if not isinstance(members['self'], URL):
-                members['self'] = URL(members['self'], "")
-            if 'index' in members:
-                members['index'] = Index(session, members['self'], **members['index'])
-        super(Catalog, __this__).__init__(session, **members)
-
     def by(self, attr):
         """Return the Tuples of self.index indexed by the given 'attr' instead.
 
@@ -207,6 +192,21 @@ class Catalog(elements.Document, CreateMixin):
             for tupl in six.itervalues(self.index)
             if attr in tupl
         ))
+
+
+class Catalog(elements.Document, CreateMixin):
+    """A Shoji Catalog."""
+
+    element = "shoji:catalog"
+    navigation_collections = ("catalogs", "orders", "views", "urls")
+
+    def __init__(__this__, session, **members):
+        if 'self' in members:
+            if not isinstance(members['self'], URL):
+                members['self'] = URL(members['self'], "")
+            if 'index' in members:
+                members['index'] = Index(session, members['self'], **members['index'])
+        super(Catalog, __this__).__init__(session, **members)
 
     def add(self, entity_url, attrs=None, **kwargs):
         """Add the given entity, plus any spurious index attributes (ICK), to self.
