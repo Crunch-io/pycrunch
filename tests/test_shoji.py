@@ -324,7 +324,8 @@ class TestEntities(TestCase):
             'attr': 'val'
         }
         index = {
-            'url/': {'key': 'val'}
+            'url1/': {'key': 'val1'},
+            'url2/': {'key': 'val2'}
         }
         ent = Entity(session, **{
             'self': ent_url,
@@ -332,3 +333,4 @@ class TestEntities(TestCase):
             'index': index
         })
         self.assertTrue(isinstance(ent.index, Index))
+        self.assertEqual(ent.by('key')['val1'].entity_url, 'url1/')
