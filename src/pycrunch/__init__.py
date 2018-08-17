@@ -35,7 +35,6 @@ Then, you can browse the site. Use `print` to pretty-indent JSON payloads:
         "description": "The API root.",
         "catalogs": {
             "datasets": "https://app.crunch.io/api/datasets/",
-            "specifications": "https://app.crunch.io/api/specifications/",
             ...
         },
         "urls": {
@@ -142,7 +141,6 @@ each Tuple in a catalog's index, which follows the link to the Entity resource:
                           u'stream': u'https://app.crunch.io/api/datasets/1234/stream/',
                           u'table': u'https://app.crunch.io/api/datasets/1234/table/'},
            u'self': u'https://app.crunch.io/api/datasets/1234/',
-           u'specification': u'https://app.crunch.io/api/specifications/datasets/',
            u'urls': {u'editor_url': u'https://app.crunch.io/api/users/00002/',
                      u'owner_url': u'https://app.crunch.io/api/users/00002/',
                      u'user_url': u'https://app.crunch.io/api/users/00002/'},
