@@ -35,7 +35,6 @@ Then, you can browse the site. Use `print` to pretty-indent JSON payloads:
         "description": "The API root.",
         "catalogs": {
             "datasets": "https://app.crunch.io/api/datasets/",
-            "specifications": "https://app.crunch.io/api/specifications/",
             ...
         },
         "urls": {
@@ -91,7 +90,6 @@ each Tuple in a catalog's index, which follows the link to the Entity resource:
         "self": "https://app.crunch.io/api/datasets/dbf9fca7b727/",
         "element": "shoji:entity",
         "description": "Detail for a given dataset",
-        "specification": "https://app.crunch.io/api/specifications/datasets/",
         "body": {
             "archived": false,
             "user_id": "253b68",
@@ -152,4 +150,3 @@ To access a Pandas Dataframe of the data in your dataset:
     >>> df = crunchpandas.dataframe_from_dataset(site,'baadf00d000339d9faadg00beab11e')
     >>> print(df)
     < Draws a dataframe table >
-
