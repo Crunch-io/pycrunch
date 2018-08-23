@@ -20,14 +20,22 @@ class TestShojiCreation(TestCase):
             setattr(resp, n, attrs[n])
         return resp
 
-    def test_create_does_post(self):
+    def test_create_does_post_catalog(self):
         sess = mock.MagicMock()
         c = Catalog(self='http://host.com/catalog', session=sess)
-
         c.create({'somedata': 1})
-
         sess.post.assert_called_once_with(
             'http://host.com/catalog',
+            json.dumps({"somedata": 1, "body": {}, "element": "shoji:entity"}, indent=4),
+            headers={'Content-Type': 'application/json'}
+        )
+
+    def test_create_does_post_entity(self):
+        sess = mock.MagicMock()
+        e = Entity(self='/entity/url/', session=sess)
+        e.create({'somedata': 1})
+        sess.post.assert_called_once_with(
+            '/entity/url/',
             json.dumps({"somedata": 1, "body": {}, "element": "shoji:entity"}, indent=4),
             headers={'Content-Type': 'application/json'}
         )
@@ -316,7 +324,8 @@ class TestEntities(TestCase):
             'attr': 'val'
         }
         index = {
-            'url/': {'key': 'val'}
+            'url1/': {'key': 'val1'},
+            'url2/': {'key': 'val2'}
         }
         ent = Entity(session, **{
             'self': ent_url,
@@ -324,3 +333,4 @@ class TestEntities(TestCase):
             'index': index
         })
         self.assertTrue(isinstance(ent.index, Index))
+        self.assertEqual(ent.by('key')['val1'].entity_url, 'url1/')
