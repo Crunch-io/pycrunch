@@ -1,6 +1,9 @@
+"""Functions for manipulating crunch cubes."""
+
 import six
 
 from pycrunch import elements
+from requests.exceptions import MissingSchema
 
 
 def fetch_cube(dataset, dimensions, weight=None, filter=None, **measures):
@@ -35,24 +38,36 @@ def fetch_cube(dataset, dimensions, weight=None, filter=None, **measures):
 
     """
     dims = []
-    for d in dimensions:
-        if isinstance(d, dict):
+    variables_alias = dataset.variables.by('alias')
+    variables_name = dataset.variables.by('name')
+    for dim in dimensions:
+        if isinstance(dim, dict):
             # This is already a Crunch expression.
-            dims.append(d)
-        elif isinstance(d, six.string_types):
-            ref = {'variable': d}
+            dims.append(dim)
+        elif isinstance(dim, six.string_types):
             # A URL of a variable entity. GET it to find its type.
-            v = dataset.session.get(d).payload
-            if v.body.type == "numeric":
+            try:
+                var = dataset.session.get(dim).payload
+            except MissingSchema:
+                try:
+                    dim = variables_alias[dim].entity_url
+                    var = dataset.session.get(dim).payload
+                except KeyError:
+                    # Try to find variables by name
+                    dim = variables_name[dim].entity_url
+                    var = dataset.session.get(dim).payload
+
+            ref = {'variable': dim}
+            if var.body.type == "numeric":
                 dims.append({"function": "bin", "args": [ref]})
-            elif v.body.type == "datetime":
-                rollup_res = v.body.view.get("rollup_resolution", None)
+            elif var.body.type == "datetime":
+                rollup_res = var.body.view.get("rollup_resolution", None)
                 dims.append({"function": "rollup", "args": [ref, {"value": rollup_res}]})
-            elif v.body.type == "categorical_array":
-                dims.append({"each": d})
+            elif var.body.type == "categorical_array":
+                dims.append({"each": dim})
                 dims.append(ref)
-            elif v.body.type == "multiple_response":
-                dims.append({"each": d})
+            elif var.body.type == "multiple_response":
+                dims.append({"each": dim})
                 dims.append({"function": "as_selected", "args": [ref]})
             else:
                 dims.append(ref)
@@ -60,11 +75,11 @@ def fetch_cube(dataset, dimensions, weight=None, filter=None, **measures):
             msg = "dimensions must be URL strings or Crunch expression objects."
             raise TypeError(msg)
 
-    q = elements.JSONObject(dimensions=dims, measures=measures)
+    cube_query = elements.JSONObject(dimensions=dims, measures=measures)
     if weight is not None:
-        q['weight'] = weight
+        cube_query['weight'] = weight
 
-    params = {"query": q.json}
+    params = {"query": cube_query.json}
     if filter is not None:
         params['filter'] = elements.JSONObject(filter).json
 
