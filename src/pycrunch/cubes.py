@@ -5,17 +5,6 @@ import six
 from pycrunch import elements
 from requests.exceptions import MissingSchema
 
-from cr.cube.crunch_cube import CrunchCube
-
-
-def crtabs(dataset, variables):
-    """Return CrunchCube representation of crosstab.
-
-    :param dataset: Dataset shoji object
-    :param variables: List of variable urls, names or aliases
-    """
-    return CrunchCube(fetch_cube(dataset, variables, count=count()))
-
 
 def fetch_cube(dataset, dimensions, weight=None, filter=None, **measures):
     """Return a shoji.View containing a crunch:cube.

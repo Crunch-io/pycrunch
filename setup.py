@@ -23,7 +23,6 @@ def get_long_desc():
 requires = [
     'requests>=2.14.0',
     'six',
-    'cr.cube',
 ]
 
 tests_requires = [
