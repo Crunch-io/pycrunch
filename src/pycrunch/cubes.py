@@ -3,7 +3,6 @@
 import six
 
 from pycrunch import elements
-from requests.exceptions import MissingSchema
 
 
 def fetch_cube(dataset, dimensions, weight=None, filter=None, **measures):
@@ -37,45 +36,9 @@ def fetch_cube(dataset, dimensions, weight=None, filter=None, **measures):
     >>> fetch_cube(dataset, dimensions, weight=weight, filter=filter, count=count)
 
     """
-    dims = []
-    variables_alias = dataset.variables.by('alias')
-    variables_name = dataset.variables.by('name')
-    for dim in dimensions:
-        if isinstance(dim, dict):
-            # This is already a Crunch expression.
-            dims.append(dim)
-        elif isinstance(dim, six.string_types):
-            # A URL of a variable entity. GET it to find its type.
-            try:
-                var = dataset.session.get(dim).payload
-            except MissingSchema:
-                try:
-                    dim = variables_alias[dim].entity_url
-                    var = dataset.session.get(dim).payload
-                except KeyError:
-                    # Try to find variables by name
-                    dim = variables_name[dim].entity_url
-                    var = dataset.session.get(dim).payload
-
-            ref = {'variable': dim}
-            if var.body.type == "numeric":
-                dims.append({"function": "bin", "args": [ref]})
-            elif var.body.type == "datetime":
-                rollup_res = var.body.view.get("rollup_resolution", None)
-                dims.append({"function": "rollup", "args": [ref, {"value": rollup_res}]})
-            elif var.body.type == "categorical_array":
-                dims.append({"each": dim})
-                dims.append(ref)
-            elif var.body.type == "multiple_response":
-                dims.append({"each": dim})
-                dims.append({"function": "as_selected", "args": [ref]})
-            else:
-                dims.append(ref)
-        else:
-            msg = "dimensions must be URL strings or Crunch expression objects."
-            raise TypeError(msg)
-
+    dims = prepare_dims(dataset, dimensions)
     cube_query = elements.JSONObject(dimensions=dims, measures=measures)
+
     if weight is not None:
         cube_query['weight'] = weight
 
@@ -89,27 +52,45 @@ def fetch_cube(dataset, dimensions, weight=None, filter=None, **measures):
     ).payload
 
 
-class Cube(elements.Element):
-    """A crunch:cube: the result of calculating measures over dimensions."""
+def prepare_dims(dataset, dimensions):
+    dims = []
+    variables_by_alias = dataset.variables.by('alias')
+    variables_by_name = dataset.variables.by('name')
 
-    element = "crunch:cube"
+    for dim in dimensions:
+        if isinstance(dim, dict):
+            # This is already a Crunch expression.
+            dims.append(dim)
+        elif isinstance(dim, six.string_types):
+            # A URL, name or alias of variable entity.
+            if dim in variables_by_alias:
+                dim = variables_by_alias[dim]
+            elif dim in variables_by_name:
+                dim = variables_by_name[dim]
+            dims.extend(prepare_ref(dim))
+        else:
+            msg = "dimensions must be URL strings or Crunch expression objects."
+            raise TypeError(msg)
+
+    return dims
+
+
+def prepare_ref(dim):
+    ref = {'variable': dim.entity_url}
+    if dim.type == "numeric":
+        ref = [{"function": "bin", "args": [ref]}]
+    elif dim.type == "datetime":
+        rollup_res = dim.rollup_resolution
+        ref = [{"function": "rollup", "args": [ref, {"value": rollup_res}]}]
+    elif dim.type == "categorical_array":
+        ref = [{"each": dim.entity_url}, ref]
+    elif dim.type == "multiple_response":
+        ref = [{"each": dim.entity_url}, {"function": "as_selected", "args": [ref]}]
+    else:
+        ref = [ref]
+
+    return ref
 
 
 def count(*args):
     return {"function": "cube_count", "args": list(args)}
-
-
-count.result = lambda data, n_missing: {
-    "data": data,
-    "n_missing": n_missing,
-    "metadata": {
-        "derived": True,
-        "references": {},
-        "type": {
-            "integer": True,
-            "class": "numeric",
-            "missing_rules": {},
-            "missing_reasons": {"No Data": -1}
-        }
-    }
-}
