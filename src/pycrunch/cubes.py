@@ -62,11 +62,16 @@ def prepare_dims(dataset, dimensions):
             # This is already a Crunch expression.
             dims.append(dim)
         elif isinstance(dim, six.string_types):
-            # A URL, name or alias of variable entity.
-            if dim in variables_by_alias:
+            if dim in dataset.variables.index:
+                # When URL is provided, fetch variable from index
+                dim = dataset.variables.index[dim]
+            elif dim in variables_by_alias:
                 dim = variables_by_alias[dim]
             elif dim in variables_by_name:
                 dim = variables_by_name[dim]
+            else:
+                msg = "Can't find dim {} in dataset {}".format(dim, ds.self)
+                raise ValueError(msg)
             dims.extend(prepare_ref(dim))
         else:
             msg = "dimensions must be URL strings or Crunch expression objects."
