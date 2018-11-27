@@ -187,11 +187,11 @@ class CreateMixin(object):
         copied to the output keys. Due to restrictions on Python dicts,
         specifying attrs which are not hashable will raise an error.
         """
-        return elements.JSONObject(**dict(
+        return elements.JSONObject(
             (tupl[attr], tupl)
             for tupl in six.itervalues(self.index)
             if attr in tupl
-        ))
+        )
 
 
 class Catalog(elements.Document, CreateMixin):
