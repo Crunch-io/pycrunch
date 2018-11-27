@@ -9,7 +9,7 @@ import sys
 from requests import Response
 
 from pycrunch.progress import DefaultProgressTracking, SimpleTextBarProgressTracking
-from pycrunch.shoji import Catalog, TaskProgressTimeoutError, TaskError, Index, Order, Entity
+from pycrunch.shoji import Catalog, CreateMixin, TaskProgressTimeoutError, TaskError, Index, Order, Entity
 from pycrunch.lemonpy import URL
 
 
@@ -334,3 +334,15 @@ class TestEntities(TestCase):
         })
         self.assertTrue(isinstance(ent.index, Index))
         self.assertEqual(ent.by('key')['val1'].entity_url, 'url1/')
+
+
+class TestCreateMixin(TestCase):
+
+    def test_by_integer_keys(self):
+        tuple1 = {'id': 1, 'name': 'A'}
+        tuple2 = {'id': 2, 'name': 'B'}
+
+        obj = CreateMixin()
+        obj.index = {'url1/': tuple1, 'url2/': tuple2}
+
+        self.assertEqual(obj.by('id'), {1: tuple1, 2: tuple2})
