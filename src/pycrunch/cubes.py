@@ -70,7 +70,7 @@ def prepare_dims(dataset, dimensions):
             elif dim in variables_by_name:
                 dim = variables_by_name[dim]
             else:
-                msg = "Can't find dim {} in dataset {}".format(dim, ds.self)
+                msg = "Can't find dim {} in dataset {}".format(dim, dataset.self)
                 raise ValueError(msg)
             dims.extend(prepare_ref(dim))
         else:
