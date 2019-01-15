@@ -33,10 +33,10 @@ from .version import __version__
 
 try:
     # Python 2
-    from urllib import urlencode
+    from urllib import urlencode, quote
 except ImportError:
     # Python 3
-    from urllib.parse import urlencode
+    from urllib.parse import urlencode, quote
 
 omitted = object()
 
@@ -164,7 +164,7 @@ class Document(Element):
             pruned_qs = {}
             for tpl, v in template_lookups.items():
                 if tpl in url:
-                    url = url.replace(tpl, qs[v])
+                    url = url.replace(tpl, quote(qs[v], safe=""))
                 else:
                     pruned_qs[v] = qs[v]
             qs = urlencode(pruned_qs)

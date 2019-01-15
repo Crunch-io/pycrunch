@@ -7,10 +7,10 @@ from pycrunch import elements, shoji
 
 try:
     # Python 2
-    from urllib import urlencode
+    from urllib import urlencode, quote
 except ImportError:
     # Python 3
-    from urllib.parse import urlencode
+    from urllib.parse import urlencode, quote
 
 
 class TestJSONObject(TestCase):
@@ -147,10 +147,10 @@ class TestDocument(TestCase):
         query = {
             "param1": "value1",
             "param2": "value2",
-            "name": "replaced"
+            "name": "replaced/evil name"
         }
         entity.follow("follow_me", query)
-        call_url = "%s?%s" % (catalog_url.replace("{name}", query['name']), urlencode({
+        call_url = "%s?%s" % (catalog_url.replace("{name}", quote(query['name'], safe="")), urlencode({
             "param1": "value1",
             "param2": "value2"
         }))
