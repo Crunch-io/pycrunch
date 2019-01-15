@@ -3,7 +3,14 @@ from unittest import TestCase
 
 import requests
 
-from pycrunch import elements
+from pycrunch import elements, shoji
+
+try:
+    # Python 2
+    from urllib import urlencode
+except ImportError:
+    # Python 3
+    from urllib.parse import urlencode
 
 
 class TestJSONObject(TestCase):
@@ -87,8 +94,67 @@ class TestDocument(TestCase):
             setattr(resp, n, attrs[n])
         return resp
 
+    def _mk_follow_doc(self, catalog_url):
+        session = mock.MagicMock()
+        resp = shoji.Catalog(session, **{
+            "element": "shoji:catalog",
+            "self": catalog_url
+        })
+        session.get = mock.MagicMock(return_value=self._mkresp(payload=resp))
+
+        entity = shoji.Entity(session, **{
+            "element": "shoji:entity",
+            "self": "self/url",
+            'body': {},
+            'catalogs': {
+                'follow_me': catalog_url
+            }
+        })
+        return entity
+
     def test_follow(self):
-        pass  # TODO
+        catalog_url = '/catalog/url/'
+        entity = self._mk_follow_doc(catalog_url)
+        self.assertEqual(entity.follow("follow_me").self, catalog_url)
+
+    def test_follow_qs_as_dict(self):
+        catalog_url = '/catalog/url/'
+        entity = self._mk_follow_doc(catalog_url)
+        query = {
+            "param1": "value1",
+            "param2": "value2",
+        }
+        entity.follow("follow_me", query)
+        entity.session.get.assert_called_with("%s?%s" % (catalog_url, urlencode(query)))
+
+    def test_follow_qs_as_string(self):  # This is the old way of using .follow
+        catalog_url = '/catalog/url/'
+        entity = self._mk_follow_doc(catalog_url)
+
+        # Note that the query is a urlencoded string
+        query = urlencode({
+            "param1": "value1",
+            "param2": "value2",
+        })
+        entity.follow("follow_me", query)
+        entity.session.get.assert_called_with("%s?%s" % (catalog_url, query))
+
+    def test_follow_uri_template(self):
+        catalog_url = '/catalog/{name}/'
+        entity = self._mk_follow_doc(catalog_url)
+
+        # Note that the query is a urlencoded string
+        query = {
+            "param1": "value1",
+            "param2": "value2",
+            "name": "replaced"
+        }
+        entity.follow("follow_me", query)
+        call_url = "%s?%s" % (catalog_url.replace("{name}", query['name']), urlencode({
+            "param1": "value1",
+            "param2": "value2"
+        }))
+        entity.session.get.assert_called_with(call_url)
 
     def test_follow_no_link(self):
         person = self.Person(session=None, self='some uri')
