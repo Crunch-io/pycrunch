@@ -31,6 +31,13 @@ from pycrunch import lemonpy
 from pycrunch.progress import DefaultProgressTracking
 from .version import __version__
 
+try:
+    # Python 2
+    from urllib import urlencode, quote
+except ImportError:
+    # Python 3
+    from urllib.parse import urlencode, quote
+
 omitted = object()
 
 
@@ -141,17 +148,31 @@ class Document(Element):
 
     def follow(self, key, qs=None):
         """GET the payload of the requested collection URL."""
+        url = None
         for collname in self.navigation_collections:
             coll = self.get(collname, {})
             if key in coll:
                 url = coll[key]
-                if qs is not None:
-                    # Remove any existing qs, such as for URI Templates.
-                    url = url.rsplit("?", 1)[0] + "?" + qs
-                return self.session.get(url).payload
+                break
 
-        raise AttributeError(
-            "%s has no link %s" % (self.__class__.__name__, key))
+        if url is None:
+            raise AttributeError(
+                "%s has no link %s" % (self.__class__.__name__, key))
+
+        if isinstance(qs, dict):
+            template_lookups = {"{%s}" % k: k for k in qs.keys()}
+            pruned_qs = {}
+            for tpl, v in template_lookups.items():
+                if tpl in url:
+                    url = url.replace(tpl, quote(qs[v], safe=""))
+                else:
+                    pruned_qs[v] = qs[v]
+            qs = urlencode(pruned_qs)
+
+        if qs is not None:
+            # Remove any existing qs, such as for URI Templates.
+            url = url.rsplit("?", 1)[0] + "?" + qs
+        return self.session.get(url).payload
 
     def refresh(self):
         """GET self.self, update self with its payload and return self."""
