@@ -314,7 +314,7 @@ def wait_progress(r, session, progress_tracker=None, entity=None):
 class View(elements.Document):
 
     element = "shoji:view"
-    navigation_collections = ("views", "urls")
+    navigation_collections = ("views", "urls", "catalogs")
 
     def __init__(__this__, session, **members):
         if 'self' in members and not isinstance(members['self'], URL):
