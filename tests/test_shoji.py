@@ -319,8 +319,8 @@ class TestIndex(TestCase):
         self.assertEqual(abs_on_rel, rel_on_abs)
         self.assertEqual(abs_on_rel, None)
         self.assertEqual(rel_on_abs, None)
-        self.assertEqual(rel_index.normalized_keys.keys(), [rel_url])
-        self.assertEqual(abs_index.normalized_keys.keys(), [rel_url])
+        self.assertEqual(list(rel_index.normalized_keys.keys()), [rel_url])
+        self.assertEqual(list(abs_index.normalized_keys.keys()), [rel_url])
 
 class TestOrders(TestCase):
     def test_follows_catalogs(self):
