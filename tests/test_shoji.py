@@ -299,6 +299,28 @@ class TestIndex(TestCase):
             (ent_4_url, (), {}),
         ])
 
+    def test_normalized_key_on_None(self):
+        base_url = URL('http://host.name/base/url/', None)
+        session = mock.MagicMock()
+
+        rel_url = '../folder/item/'
+        abs_url = URL(rel_url, base_url).absolute
+
+        rel_index = Index(session, base_url, **{
+            rel_url: None
+        })
+        abs_index = Index(session, base_url, **{
+            abs_url: None
+        })
+
+        abs_on_rel = rel_index[abs_url]
+        rel_on_abs = abs_index[rel_url]
+
+        self.assertEqual(abs_on_rel, rel_on_abs)
+        self.assertEqual(abs_on_rel, None)
+        self.assertEqual(rel_on_abs, None)
+        self.assertEqual(list(rel_index.normalized_keys.keys()), [rel_url])
+        self.assertEqual(list(abs_index.normalized_keys.keys()), [rel_url])
 
 class TestOrders(TestCase):
     def test_follows_catalogs(self):
