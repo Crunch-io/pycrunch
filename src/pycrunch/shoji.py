@@ -151,7 +151,7 @@ class CreateMixin(object):
         elif isinstance(entity, dict) and not isinstance(entity, elements.Document):
             entity = Entity(self.session, **entity)
 
-        response = self.post(data=json.dumps(entity))
+        response = self.post(data=json.dumps(entity, indent=None, separators=(',', ':')))
         if response.history:
             # Coming from a redirect
             seeother = [r for r in response.history if r.status_code == 303]

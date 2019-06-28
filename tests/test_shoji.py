@@ -26,7 +26,11 @@ class TestShojiCreation(TestCase):
         c.create({'somedata': 1})
         sess.post.assert_called_once_with(
             'http://host.com/catalog',
-            json.dumps({"somedata": 1, "body": {}, "element": "shoji:entity"}),
+            json.dumps(
+                {"somedata": 1, "body": {}, "element": "shoji:entity"},
+                indent=None,
+                separators=(',', ':'),
+            ),
             headers={'Content-Type': 'application/json'}
         )
 
@@ -36,7 +40,11 @@ class TestShojiCreation(TestCase):
         e.create({'somedata': 1})
         sess.post.assert_called_once_with(
             '/entity/url/',
-            json.dumps({"somedata": 1, "body": {}, "element": "shoji:entity"}),
+            json.dumps(
+                {"somedata": 1, "body": {}, "element": "shoji:entity"},
+                indent=None,
+                separators=(',', ':'),
+            ),
             headers={'Content-Type': 'application/json'}
         )
 
