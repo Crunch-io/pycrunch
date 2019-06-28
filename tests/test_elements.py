@@ -21,6 +21,8 @@ class TestJSONObject(TestCase):
     def test_json_property(self):
         foo = self.Foo(bar=42)
         expected = '{\n    "bar": 42\n}'
+        self.assertEqual(foo.pretty, expected)
+        expected = '{"bar":42}'
         self.assertEqual(foo.json, expected)
 
     def test_str(self):

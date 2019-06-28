@@ -46,6 +46,10 @@ class JSONObject(dict):
 
     @property
     def json(self):
+        return json.dumps(self, indent=None, separators=(',', ':'))
+
+    @property
+    def pretty(self):
         return json.dumps(self, indent=4)
 
     def __str__(self):
