@@ -77,13 +77,11 @@ class Index(elements.JSONObject):
         # user asks to fetch an item by.
         normalized_keys = {}
         for entity_url, tup in six.iteritems(members):
-            if tup is not None:
-                url = entity_url
-                if not hasattr(url, "relative_to"):  # Faster than isinstance(url, URL)
-                    url = URL(url, catalog_url_absolute)
-
-                members[url] = Tuple(session, url, **tup)
-                normalized_keys[url.relative_to(catalog_url)] = url
+            url = entity_url
+            if not hasattr(url, "relative_to"):  # Faster than isinstance(url, URL)
+                url = URL(url, catalog_url_absolute)
+            members[url] = Tuple(session, url, **tup) if tup is not None else None
+            normalized_keys[url.relative_to(catalog_url)] = url
 
         self.normalized_keys = normalized_keys
         elements.JSONObject.__init__(self, **members)
