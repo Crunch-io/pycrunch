@@ -231,6 +231,28 @@ class Catalog(elements.Document, CreateMixin):
         p = self.__class__(self.session, self=self.self, index={entity_url: None})
         return self.patch(data=p.json).payload
 
+    def void_catalog(self, name):
+        """Return a dummy Catalog without pre-populating it via GET.
+
+        This returns a Catalog instance, whose `self` attribute is correct,
+        but which has no other members like `index` or further `catalogs`
+        or other navigation collections. It can't, because those would require
+        a GET to populate, which this method purposefully avoids. If you
+        later need to populate it, simply call its refresh() method.
+
+        The returned Catalog will have usable `create`, `add`, `edit`, `drop`,
+        and other methods that only use the `self` URL to function properly.
+        Use e.g. `void_catalog("foo").create(entity)` to POST a new entity
+        to the "foo" catalog without having to first GET the "foo" catalog.
+        This can be a useful optimization for large catalogs that are
+        expensive to GET.
+
+        Use this method sparingly, and only with very stable APIs, because it
+        makes assumptions about the media type which would have been returned
+        if we were to do a GET.
+        """
+        return Catalog(self.session, self=self.catalogs[name])
+
 
 class Entity(elements.Document, CreateMixin):
 
