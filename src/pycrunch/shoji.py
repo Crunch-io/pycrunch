@@ -12,7 +12,7 @@ from six.moves import urllib
 import six
 
 from pycrunch import elements
-from berrypy import URL, ClientError, ServerError
+from pycrunch.lemonpy import URL, ClientError, ServerError
 
 
 class Tuple(elements.JSONObject):
