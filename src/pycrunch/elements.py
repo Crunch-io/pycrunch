@@ -171,9 +171,15 @@ class Document(Element):
         If they need additional members, you must either provide them as keyword
         arguments to this method, or call .refresh().
 
-        Use this method sparingly, and only with very stable APIs, because it
-        makes assumptions about the media type which would have been returned
-        if had performed an HTTP GET.
+        Use this method sparingly, because it hard-codes assumptions about
+        the response which would have been returned if an HTTP GET had been
+        performed. Inspecting the actual response allows the API to evolve
+        more easily over time, allowing redirects and other response codes,
+        additional response headers, improved media types, and new hyperlinks,
+        without having to rewrite clients. When fetching the actual response
+        becomes too expensive, this method can be used to trade evolvability
+        for speed; where possible, you should also discuss with the service
+        provider whether the GET can be made less expensive to have both.
         """
         for collname, cls in six.iteritems(self.navigation_collections):
             coll = self.get(collname, {})
