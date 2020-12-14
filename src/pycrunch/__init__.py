@@ -195,10 +195,11 @@ __all__ = [
     'shoji',
     'TaskError', 'TaskProgressTimeoutError',
     'importing',
-    'ClientError', 'ServerError', 'CrunchError'
+    'ClientError', 'ServerError', 'CrunchError',
     'Session',
     'urljoin',
-    'connect', 'connect_with_token'
+    'connect', 'connect_with_token',
+    '__version__',
 ]
 
 
