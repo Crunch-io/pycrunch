@@ -155,6 +155,30 @@ class TestShojiCreation(TestCase):
         self.assertEqual(''.join(FakeStdout.writes).count('-'),
                          SimpleTextBarProgressTracking.BAR_WIDTH)
 
+    def test_void_catalog_create(self):
+        sess = mock.MagicMock()
+        c = Catalog(self='http://host.com/catalog', session=sess)
+        things_url = "http://host.com/catalog/things"
+        c["catalogs"] = {"things": things_url}
+
+        # void_catalog...
+        things = c.void("things")
+        # ...MUST NOT call GET...
+        sess.get.assert_not_called()
+        # ...MUST return a dummy Catalog...
+        assert things.__class__ == Catalog
+        assert things.self == things_url
+        assert things.session is c.session
+        assert dict(things) == {"element": "shoji:catalog", "self": things_url}
+
+        # ...MUST have a working `create` method...
+        things.create({'somedata': 1})
+        sess.post.assert_called_once_with(
+            'http://host.com/catalog/things',
+            json.dumps({"somedata": 1, "body": {}, "element": "shoji:entity"}, indent=None, separators=(',', ':')),
+            headers={'Content-Type': 'application/json'}
+        )
+
     def test_accepts_document_instance(self):
         sess = mock.MagicMock()
         location = 'http://host.com/somewhere'

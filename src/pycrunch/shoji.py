@@ -196,7 +196,6 @@ class Catalog(elements.Document, CreateMixin):
     """A Shoji Catalog."""
 
     element = "shoji:catalog"
-    navigation_collections = ("catalogs", "orders", "views", "urls")
 
     def __init__(__this__, session, **members):
         if 'self' in members:
@@ -235,7 +234,6 @@ class Catalog(elements.Document, CreateMixin):
 class Entity(elements.Document, CreateMixin):
 
     element = "shoji:entity"
-    navigation_collections = ("catalogs", "fragments", "views", "urls", 'orders')
 
     def __init__(__this__, session, **members):
         members.setdefault("body", {})
@@ -312,7 +310,6 @@ def wait_progress(r, session, progress_tracker=None, entity=None):
 class View(elements.Document):
 
     element = "shoji:view"
-    navigation_collections = ("views", "urls")
 
     def __init__(__this__, session, **members):
         if 'self' in members and not isinstance(members['self'], URL):
@@ -338,7 +335,9 @@ class View(elements.Document):
 class Order(elements.Document):
 
     element = "shoji:order"
-    navigation_collections = ("catalogs",)
+    navigation_collections = {
+        "catalogs": Catalog,
+    }
 
     def __init__(__this__, session, **members):
         if 'self' in members and not isinstance(members['self'], URL):
@@ -382,3 +381,22 @@ class TaskError(ClientError, ServerError):
     @property
     def message(self):
         return self.args[0]
+
+
+Catalog.navigation_collections = {
+    "catalogs": Catalog,
+    "orders": Order,
+    "views": View,
+    "urls": elements.Document,
+}
+Entity.navigation_collections = {
+    "catalogs": Catalog,
+    "fragments": Entity,
+    "orders": Order,
+    "views": View,
+    "urls": elements.Document,
+}
+View.navigation_collections = {
+    "views": View,
+    "urls": elements.Document,
+}

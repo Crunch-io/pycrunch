@@ -131,7 +131,7 @@ class Document(Element):
     and delete. Not every resource is guaranteed to respond to all.
     """
 
-    navigation_collections = ()
+    navigation_collections = {}
 
     def __getattr__(self, key):
         # Return the requested attribute if present in self.keys
@@ -146,6 +146,45 @@ class Document(Element):
             if key in coll:
                 url = coll[key]
                 return self.session.get(url).payload
+
+        raise AttributeError(
+            "%s has no attribute %s" % (self.__class__.__name__, key))
+
+    def void(self, key, **members):
+        """Return a dummy Document without populating it via HTTP GET.
+
+        For example, call `root.void("foo").post(entity)` to POST an entity to
+        the "foo" resource without having to first GET the "foo" resource. This
+        can be a useful optimization for large resources that are expensive to GET.
+
+        This returns a Document instance with a `self` attribute, but no
+        additional members other than those provided. It can't, because
+        populating those would require a GET, which this method purposefully
+        avoids. If you later need to populate the Document, simply call its
+        refresh() method to perform the GET.
+
+        The returned Document will have `post`, `put`, `patch`, and `delete`
+        methods, which only need the `self` URL to function properly. If a
+        different Document subclass can be determined from the navigation
+        collection in which the key is found, it will be used and some of
+        its methods may also work properly if they only need the `self` URL.
+        If they need additional members, you must either provide them as keyword
+        arguments to this method, or call .refresh().
+
+        Use this method sparingly, because it hard-codes assumptions about
+        the response which would have been returned if an HTTP GET had been
+        performed. Inspecting the actual response allows the API to evolve
+        more easily over time, allowing redirects and other response codes,
+        additional response headers, improved media types, and new hyperlinks,
+        without having to rewrite clients. When fetching the actual response
+        becomes too expensive, this method can be used to trade evolvability
+        for speed; where possible, you should also discuss with the service
+        provider whether the GET can be made less expensive to have both.
+        """
+        for collname, cls in six.iteritems(self.navigation_collections):
+            coll = self.get(collname, {})
+            if key in coll:
+                return cls(self.session, self=coll[key], **members)
 
         raise AttributeError(
             "%s has no attribute %s" % (self.__class__.__name__, key))
