@@ -36,10 +36,15 @@ jobs:
         pip install tox
 
     - name: Test with tox
-      if: TOXENV == 'lint'
+      if: matrix.python-version == '3.6'
+      env:
+        TOXENV: py27
+        TOXENV: py36
+        TOXENV: coverage
+        TOXENV: lint
       run: tox
-      continue-on-error: true
+      continue-on-error: TOXENV=='lint'
 
     - name: Test with tox
-      if: TOXENV != 'lint'
+      if: matrix.python-version != '3.6'
       run: tox
