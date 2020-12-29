@@ -18,12 +18,12 @@ jobs:
       matrix:
         python-version: [2.7, 3.4, 3.5, 3.6]
         env:
-          TOXENV: py27
-          TOXENV: py34
-          TOXENV: py35
-          TOXENV: py36
-          TOXENV: coverage
-          TOXENV: lint
+          - TOXENV: py27
+          - TOXENV: py34
+          - TOXENV: py35
+          - TOXENV: py36
+          - TOXENV: coverage
+          - TOXENV: lint
     steps:
     - uses: actions/checkout@v1
     - name: Set up Python ${{ matrix.python-version }}
