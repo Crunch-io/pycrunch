@@ -35,7 +35,7 @@ jobs:
         pip install --upgrade pip
         pip install tox
 
-    - name: Test with tox
+    - name: Test with tox for TOXENV py34
       if: matrix.python-version == '3.4'
       env:
         TOXENV: py34
@@ -54,6 +54,6 @@ jobs:
       run: tox
       continue-on-error: true
 
-    - name: Test with tox ${{env.TOXENV}}
+    - name: Test with tox for other TOXENV
       if: matrix.python-version != '3.6'
       run: tox
