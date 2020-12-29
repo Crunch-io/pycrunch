@@ -44,11 +44,9 @@ jobs:
 
     - name: Test with tox
       if: matrix.env.TOXENV == 'lint'
-      env: ${{ matrix.env }}
       run: tox
       continue-on-error: true
 
     - name: Test with tox
       if: matrix.env.TOXENV != 'lint'
-      env: ${{ matrix.env }}
       run: tox
