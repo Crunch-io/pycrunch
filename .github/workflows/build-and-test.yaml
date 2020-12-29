@@ -38,9 +38,7 @@ jobs:
     - name: Test with tox
       if: matrix.python-version == '3.6'
       env:
-        TOXENV: py27
-        TOXENV: coverage
-        TOXENV: lint
+        TOXENV: py27,py36,coverage,lint
       run: tox
       continue-on-error: TOXENV=='lint'
 
