@@ -38,9 +38,16 @@ jobs:
     - name: Test with tox
       if: matrix.python-version == '3.6'
       env:
-        TOXENV: py27,py36,coverage,lint
+        TOXENV: py27,py36,coverage
       run: tox
       continue-on-error: TOXENV=='lint'
+
+    - name: Test with tox
+      if: matrix.python-version == '3.6'
+      env:
+        TOXENV: lint
+      run: tox
+      continue-on-error: true
 
     - name: Test with tox
       if: matrix.python-version != '3.6'
