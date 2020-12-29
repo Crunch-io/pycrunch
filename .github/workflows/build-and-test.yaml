@@ -17,6 +17,13 @@ jobs:
       max-parallel: 4
       matrix:
         python-version: [2.7, 3.4, 3.5, 3.6]
+        env:
+          TOXENV: py27
+          TOXENV: py34
+          TOXENV: py35
+          TOXENV: py36
+          TOXENV: coverage
+          TOXENV: lint
     steps:
     - uses: actions/checkout@v1
     - name: Set up Python ${{ matrix.python-version }}
@@ -55,5 +62,5 @@ jobs:
       continue-on-error: true
 
     - name: Test with tox for other TOXENV
-      if: matrix.python-version != '3.6'
+      if: matrix.python-version != '3.6' and matrix.python-version == '3.4'
       run: tox
