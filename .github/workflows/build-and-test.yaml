@@ -17,24 +17,38 @@ jobs:
       max-parallel: 4
       matrix:
         python-version: [2.7, 3.4, 3.5, 3.6]
-
+        env:
+          - TOXENV: py27
+          - TOXENV: py34
+          - TOXENV: py35
+          - TOXENV: py36
+          - TOXENV: coverage
+          - TOXENV: lint
     steps:
     - uses: actions/checkout@v1
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
+    - name: Install dependencies python different from 3.4
       if: matrix.python-version != '3.4'
       run: |
         pip install --upgrade pip
         pip install tox tox-gh-actions
 
-    - name: Install dependencies
+    - name: Install dependencies for python 3.4
       if: matrix.python-version == '3.4'
       run: |
         pip install --upgrade pip
         pip install tox
 
-    - name: Test with tox
+    - name: Test with tox ${{ matrix.env.TOXENV }}
+      if: matrix.env.TOXENV == 'lint'
+      env: ${{ matrix.env }}
+      run: tox
+      continue-on-error: true
+
+    - name: Test with tox ${{ matrix.env.TOXENV }}
+      if: matrix.env.TOXENV != 'lint'
+      env: ${{ matrix.env }}
       run: tox

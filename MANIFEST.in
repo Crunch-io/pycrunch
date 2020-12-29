@@ -6,6 +6,6 @@ include COPYING COPYING.LESSER
 include LICENSE
 
 include .coveragerc
-include tox.ini .travis.yml
+include tox.ini
 
 recursive-exclude * __pycache__ *.py[cod]
