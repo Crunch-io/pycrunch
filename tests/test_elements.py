@@ -208,6 +208,16 @@ class TestDocument(TestCase):
             headers={'Content-Type': 'application/json'}
         )
 
+    def test_post_with_params(self):
+        session_mock = mock.MagicMock()
+        person = self.Person(session=session_mock, self='some uri?param_1=a&param_2=b')
+        person.post(data={'age': 10})
+        session_mock.post.assert_called_once_with(
+            'some uri',
+            '{"age": 10}',
+            headers={'Content-Type': 'application/json'}
+        )
+
     def test_put(self):
         session_mock = mock.MagicMock()
         person = self.Person(session=session_mock, self='some uri')

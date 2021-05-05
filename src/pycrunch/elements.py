@@ -34,9 +34,10 @@ from .version import __version__
 try:
     # Python 2
     from urllib import urlencode, quote
+    from urlparse import urlunparse, urlparse
 except ImportError:
     # Python 3
-    from urllib.parse import urlencode, quote
+    from urllib.parse import urlencode, quote, urlunparse, urlparse
 
 omitted = object()
 
@@ -232,7 +233,9 @@ class Document(Element):
         kwargs["headers"].setdefault("Content-Type", "application/json")
         if not isinstance(data, six.string_types):
             data = json.dumps(data)
-        return self.session.post(self.self, data, *args, **kwargs)
+        # Remove any existing params, such as "limit=0"
+        url = urlunparse(urlparse(self.self)._replace(query=""))
+        return self.session.post(url, data, *args, **kwargs)
 
     def put(self, data, *args, **kwargs):
         kwargs.setdefault('headers', {})
