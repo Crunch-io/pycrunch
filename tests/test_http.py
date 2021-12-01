@@ -1,7 +1,9 @@
 from unittest import TestCase
 
+import pytest
 import requests
-from pycrunch import Session, __version__
+
+from pycrunch import connect, connect_with_token, Session, __version__
 from pycrunch.lemonpy import ServerError
 
 try:
@@ -81,3 +83,48 @@ class TestHTTPResponses(TestCase):
             handler.status_401(r)
         gep.assert_called_once_with(url_401, no_proxy=None)
         sess.send.assert_called_with(fake_request, proxies={})
+
+
+@pytest.fixture
+def mock_sess():
+    mock_sess = mock.MagicMock()
+    mock_sess.return_value = {
+        "https://us.crunch.io/api/": mock.MagicMock(payload="success"),
+        "https://app.crunch.io/api/": mock.MagicMock(payload="success"),
+    }
+    return mock_sess
+
+
+def test_connect(mock_sess):
+    warning = "Connecting to Crunch API services with a username and password will be removed soon. Please use connect_with_token."
+
+    with pytest.warns(UserWarning, match=warning):
+        ret = connect(
+            "me@mycompany.com",
+            "yourpassword",
+            session_class=mock_sess,
+        )
+
+    assert ret == "success"
+    mock_sess.assert_called_once_with(
+        "me@mycompany.com",
+        "yourpassword",
+        progress_tracking=None,
+    )
+
+
+def test_connect_with_token(mock_sess):
+    """
+    site_url will be required in the near future
+    """
+    warning = "Please provide a site_url. This will soon be a requirement."
+
+    with pytest.warns(UserWarning, match=warning):
+        ret = connect_with_token("FOO", session_class=mock_sess)
+
+    assert ret == "success"
+    mock_sess.assert_called_once_with(
+        token="FOO",
+        domain="us.crunch.io",
+        progress_tracking=None,
+    )
