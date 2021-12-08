@@ -113,11 +113,32 @@ def test_connect(mock_sess):
     )
 
 
+def test_connect_with_api_key(mock_sess):
+    ret = connect(
+        "me@mycompany.com",
+        "yourpassword",
+        session_class=mock_sess,
+    )
+
+    assert ret == "success"
+    mock_sess.assert_called_once_with(
+        "me@mycompany.com",
+        "yourpassword",
+        progress_tracking=None,
+    )
+
+
+def test_connect_with_no_creds():
+    with pytest.raises(RuntimeError) as err:
+        connect()
+    assert str(err.value) == "You must provide either a user and pw or an api_key"
+
+
 def test_connect_with_token(mock_sess):
     """
     site_url will be required in the near future
     """
-    warning = "Please provide a site_url. This will soon be a requirement."
+    warning = "Please provide a site_url that includes your account's subdomain. This will soon be a requirement."
 
     with pytest.warns(UserWarning, match=warning):
         ret = connect_with_token("FOO", session_class=mock_sess)
@@ -125,6 +146,6 @@ def test_connect_with_token(mock_sess):
     assert ret == "success"
     mock_sess.assert_called_once_with(
         token="FOO",
-        domain="us.crunch.io",
+        domain="app.crunch.io",
         progress_tracking=None,
     )

@@ -218,29 +218,48 @@ class CrunchTable(elements.Document):
 session = None
 
 
-def connect(user, pw, site_url="https://app.crunch.io/api/",
-            progress_tracking=None, session_class=Session):
+def connect(user="", pw="", site_url="https://app.crunch.io/api/",
+            progress_tracking=None, session_class=Session, api_key=""):
     """
-    Log in to Crunch with a user/pw; return the top-level Site payload.  Using
+    Log in to Crunch with a user/pw or api key; return the top-level Site payload. Using
     this or the other connect method (the first time only) stores a reference
     to the session created in pycrunch.session for future use.
     Returns the API Root Entity, or errors if unable to connect.
     """
-    warnings.warn(
-        "Connecting to Crunch API services with a username and password will be removed soon. Please use connect_with_token.",
-        UserWarning
-    )
-
     global session
-    ret = session_class(
-        user, pw, progress_tracking=progress_tracking
-    ).get(site_url).payload
+
+    if site_url == "https://app.crunch.io/api/":
+        warnings.warn(
+            "Please provide a site_url that includes your account's subdomain. This will soon be a requirement.",
+            UserWarning
+        )
+
+    if api_key:
+        sess = session_class(
+            token=api_key,
+            domain=urllib.parse.urlparse(site_url).netloc,
+            progress_tracking=progress_tracking
+        )
+    elif user and pw:
+        warnings.warn(
+            "Connecting to Crunch API services with a username and password will be removed soon. Please use connect_with_token.",
+            UserWarning
+        )
+
+        sess = session_class(
+            user, pw, progress_tracking=progress_tracking
+        )
+    else:
+        raise RuntimeError("You must provide either a user and pw or an api_key")
+
+    ret = sess.get(site_url).payload
+
     if session is None:
         session = ret
     return ret
 
 
-def connect_with_token(token, site_url="https://us.crunch.io/api/",
+def connect_with_token(token, site_url="https://app.crunch.io/api/",
                        progress_tracking=None, session_class=Session):
     """
     Log in to Crunch with a token; return the top-level Site payload. Using
@@ -250,19 +269,16 @@ def connect_with_token(token, site_url="https://us.crunch.io/api/",
     Returns the API Root Entity, or errors if unable to connect.
     """
     warnings.warn(
-        "Please provide a site_url. This will soon be a requirement.",
+        "connect_with_token will be removed soon. Please use connect instead",
         UserWarning
     )
 
-    global session
-    ret = session_class(
-        token=token,
-        domain=urllib.parse.urlparse(site_url).netloc,
-        progress_tracking=progress_tracking
-    ).get(site_url).payload
-    if session is None:
-        session = ret
-    return ret
+    return connect(
+        api_key=token,
+        site_url=site_url,
+        progress_tracking=progress_tracking,
+        session_class=session_class
+    )
 
 
 def get_dataset(dataset_name_or_id, site=None):
