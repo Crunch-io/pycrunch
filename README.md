@@ -19,6 +19,10 @@ Getting started
 Start a simple site session via:
 
     >>> import pycrunch
+    >>> site = pycrunch.connect(api_key="DFIJFIJWIEJIJFKSJLKKDJKFJSLLSLSL", site_url="https://your-domain.crunch.io/api/")
+
+Or, if you don't have an API Key:
+
     >>> site = pycrunch.connect("me@mycompany.com", "yourpassword", "https://your-domain.crunch.io/api/")
 
 Or, if you have a crunch access token:
