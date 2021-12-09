@@ -231,7 +231,7 @@ def connect(user="", pw="", site_url="https://app.crunch.io/api/",
     if site_url == "https://app.crunch.io/api/":
         warnings.warn(
             "Please provide a site_url that includes your account's subdomain. This will soon be a requirement.",
-            UserWarning
+            DeprecationWarning
         )
 
     if api_key:
@@ -242,8 +242,8 @@ def connect(user="", pw="", site_url="https://app.crunch.io/api/",
         )
     elif user and pw:
         warnings.warn(
-            "Connecting to Crunch API services with a username and password will be removed soon. Please use connect_with_token.",
-            UserWarning
+            "Connecting to Crunch API services with a username and password will be removed soon. Please use connect(api_key=<key>, site_url=<site_url>).",
+            DeprecationWarning
         )
 
         sess = session_class(
@@ -269,8 +269,8 @@ def connect_with_token(token, site_url="https://app.crunch.io/api/",
     Returns the API Root Entity, or errors if unable to connect.
     """
     warnings.warn(
-        "connect_with_token will be removed soon. Please use connect instead",
-        UserWarning
+        "connect_with_token will be removed soon. Please use connect(api_key=<key>, site_url=<site_url>) instead.",
+        DeprecationWarning
     )
 
     return connect(
