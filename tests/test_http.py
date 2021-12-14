@@ -1,7 +1,9 @@
 from unittest import TestCase
 
+import pytest
 import requests
-from pycrunch import Session, __version__
+
+from pycrunch import connect, connect_with_token, Session, __version__
 from pycrunch.lemonpy import ServerError
 
 try:
@@ -81,3 +83,87 @@ class TestHTTPResponses(TestCase):
             handler.status_401(r)
         gep.assert_called_once_with(url_401, no_proxy=None)
         sess.send.assert_called_with(fake_request, proxies={})
+
+
+@pytest.fixture
+def mock_sess():
+    mock_sess = mock.MagicMock()
+    mock_sess.return_value = {
+        "https://us.crunch.io/api/": mock.MagicMock(payload="success"),
+        "https://app.crunch.io/api/": mock.MagicMock(payload="success"),
+    }
+    return mock_sess
+
+
+def test_connect(mock_sess):
+    warnings = [
+        "Please provide a site_url that includes your account's subdomain. This will soon be a requirement.",
+        "Connecting to Crunch API services with a username and password will be removed soon. Please use connect(api_key=<key>, site_url=<site_url>).",
+    ]
+
+    with pytest.warns(DeprecationWarning) as warninfo:
+        ret = connect(
+            "me@mycompany.com",
+            "yourpassword",
+            session_class=mock_sess,
+        )
+
+    warns = {(warn.category, warn.message.args[0]) for warn in warninfo}
+    expected = {
+        (DeprecationWarning, warnings[0]),
+        (DeprecationWarning, warnings[1])
+    }
+    assert warns == expected
+    assert ret == "success"
+    mock_sess.assert_called_once_with(
+        "me@mycompany.com",
+        "yourpassword",
+        progress_tracking=None,
+    )
+
+
+def test_connect_with_api_key(mock_sess):
+    ret = connect(
+        "me@mycompany.com",
+        "yourpassword",
+        session_class=mock_sess,
+    )
+
+    assert ret == "success"
+    mock_sess.assert_called_once_with(
+        "me@mycompany.com",
+        "yourpassword",
+        progress_tracking=None,
+    )
+
+
+def test_connect_with_no_creds():
+    with pytest.raises(RuntimeError) as err:
+        connect()
+    assert str(err.value) == "You must provide either a user and pw or an api_key"
+
+
+def test_connect_with_token(mock_sess):
+    """
+    site_url will be required in the near future
+    """
+    warnings = [
+        "connect_with_token will be removed soon. Please use connect(api_key=<key>, site_url=<site_url>) instead.",
+        "Please provide a site_url that includes your account's subdomain. This will soon be a requirement.",
+    ]
+
+    with pytest.warns(DeprecationWarning) as warninfo:
+        ret = connect_with_token("FOO", session_class=mock_sess)
+
+    warns = {(warn.category, warn.message.args[0]) for warn in warninfo}
+    expected = {
+        (DeprecationWarning, warnings[0]),
+        (DeprecationWarning, warnings[1])
+    }
+    assert warns == expected
+    assert ret == "success"
+    mock_sess.assert_called_once_with(
+        token="FOO",
+        domain="app.crunch.io",
+        progress_tracking=None,
+    )
