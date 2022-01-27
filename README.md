@@ -27,7 +27,7 @@ Or, if you don't have an API Key:
 
 Then, you can create an API Key:
 
-    >>> apk = site.apikeys.create({"name": "My API Key"})
+    >>> apk = site.apikeys.create({"body": {"name": "API Key"}})
     >>> apk.refresh()
     >>> site = pycrunch.connect(api_key=apk.body["key"], site_url="https://your-domain.crunch.io/api/")
 
