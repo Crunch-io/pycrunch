@@ -16,34 +16,23 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: 
+        python-version:
           - 2.7
-          - 3.4
           - 3.5
           - 3.6
+          - 3.7
+          - 3.8
+          - 3.9
     steps:
     - uses: actions/checkout@v1
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies python different from 3.4
-      if: matrix.python-version != '3.4'
+    - name: Install dependencies
       run: |
         pip install --upgrade pip
         pip install tox tox-gh-actions
-
-    - name: Install dependencies for python 3.4
-      if: matrix.python-version == '3.4'
-      run: |
-        pip install --upgrade pip
-        pip install tox
-
-    - name: Test with tox for TOXENV py34
-      if: matrix.python-version == '3.4'
-      env:
-        TOXENV: py34
-      run: tox
 
     - name: Test with tox ${{env.TOXENV}}
       if: matrix.python-version == '3.6'
@@ -51,7 +40,7 @@ jobs:
         TOXENV: py27,py36,coverage
       run: tox
 
-    - name: Test with tox ${{env.TOXENV}}
+    - name: Lint Test with tox ${{env.TOXENV}}
       if: matrix.python-version == '3.6'
       env:
         TOXENV: lint
@@ -59,5 +48,5 @@ jobs:
       continue-on-error: true
 
     - name: Test with tox for other TOXENV
-      if: matrix.python-version != '3.6' && matrix.python-version != '3.4'
+      if: matrix.python-version != '3.6'
       run: tox

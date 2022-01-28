@@ -1,48 +1,49 @@
-.DS_Store
-*.swp
-*.py[cod]
-*.orig
-cr/lib/tests/datadir/
-venv/
+
+
+
+
+
+
+
 
 # C extensions
-*.so
-
+# Installer logs
+# Mr Developer
 # Packages
+# Translations
+# Unit test / coverage reports
+#Wing
 *.egg
 *.egg-info
-dist
-build
-eggs
-parts
-bin
-local
-var
-sdist
-develop-eggs
-.installed.cfg
-lib64
-
-# Installer logs
-pip-log.txt
-
-# Unit test / coverage reports
-.coverage
-.tox
-nosetests.xml
-
-# Translations
 *.mo
-
-# Mr Developer
+*.orig
+*.py[cod]
+*.so
+*.swp
+*.wpr
+*.wpu
+.DS_Store
+.cache/
+.coverage
+.idea
+.installed.cfg
 .mr.developer.cfg
 .project
 .pydevproject
-.idea
-
-#Wing
-*.wpr
-*.wpu
-.cache/
-
 .pytest_cache/
+.tox
+/.python-version
+bin
+build
+cr/lib/tests/datadir/
+develop-eggs
+dist
+eggs
+lib64
+local
+nosetests.xml
+parts
+pip-log.txt
+sdist
+var
+venv/
