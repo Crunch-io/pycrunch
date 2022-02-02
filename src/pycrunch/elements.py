@@ -218,7 +218,7 @@ class Document(Element):
             url = url.rsplit("?", 1)[0] + "?" + qs
         kwargs.setdefault('headers', {})
         kwargs["headers"].setdefault("Accept", "application/json")
-        return self.session.get(url, headers=headers).payload
+        return self.session.get(url, **kwargs).payload
 
     def refresh(self):
         """GET self.self, update self with its payload and return self."""

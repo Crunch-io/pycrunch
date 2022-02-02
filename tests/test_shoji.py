@@ -350,7 +350,7 @@ class TestOrders(TestCase):
     def test_follows_catalogs(self):
         catal_url = '/catalog/url/'
         session = mock.Mock(**{
-            'get': lambda x: mock.Mock(**{'payload.self': catal_url})
+            'get': lambda x, **kwargs: mock.Mock(**{'payload.self': catal_url})
         })
 
         order = Order(session, **{
