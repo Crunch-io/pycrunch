@@ -217,7 +217,7 @@ class Document(Element):
             # Remove any existing qs, such as for URI Templates.
             url = url.rsplit("?", 1)[0] + "?" + qs
         kwargs.setdefault('headers', {})
-        kwargs["headers"].setdefault("Accept", "application/json")
+        kwargs["headers"].setdefault("Accept", "application/json, */*")
         return self.session.get(url, **kwargs).payload
 
     def refresh(self):

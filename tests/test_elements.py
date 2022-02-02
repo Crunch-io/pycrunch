@@ -127,7 +127,7 @@ class TestDocument(TestCase):
             "param2": "value2",
         }
         entity.follow("follow_me", query)
-        headers = {"Accept": "application/json"}
+        headers = {"Accept": "application/json, */*"}
         entity.session.get.assert_called_with("%s?%s" % (catalog_url, urlencode(query)), headers=headers)
 
     def test_follow_qs_as_string(self):  # This is the old way of using .follow
@@ -140,7 +140,7 @@ class TestDocument(TestCase):
             "param2": "value2",
         })
         entity.follow("follow_me", query)
-        headers = {"Accept": "application/json"}
+        headers = {"Accept": "application/json, */*"}
         entity.session.get.assert_called_with("%s?%s" % (catalog_url, query), headers=headers)
 
     def test_follow_uri_template(self):
@@ -158,7 +158,7 @@ class TestDocument(TestCase):
             "param1": "value1",
             "param2": "value2"
         }))
-        headers = {"Accept": "application/json"}
+        headers = {"Accept": "application/json, */*"}
         entity.session.get.assert_called_with(call_url, headers=headers)
 
     def test_follow_no_link(self):
