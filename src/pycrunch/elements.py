@@ -139,13 +139,14 @@ class Document(Element):
         if v is not omitted:
             return v
 
+        headers = {"Accept": "application/json"}
         # If the requested attribute is present in a URL collection,
         # do a GET and return its payload.
         for collname in self.navigation_collections:
             coll = self.get(collname, {})
             if key in coll:
                 url = coll[key]
-                return self.session.get(url).payload
+                return self.session.get(url, headers=headers).payload
 
         raise AttributeError(
             "%s has no attribute %s" % (self.__class__.__name__, key))
@@ -189,7 +190,7 @@ class Document(Element):
         raise AttributeError(
             "%s has no attribute %s" % (self.__class__.__name__, key))
 
-    def follow(self, key, qs=None):
+    def follow(self, key, qs=None, **kwargs):
         """GET the payload of the requested collection URL."""
         url = None
         for collname in self.navigation_collections:
@@ -215,7 +216,9 @@ class Document(Element):
         if qs is not None:
             # Remove any existing qs, such as for URI Templates.
             url = url.rsplit("?", 1)[0] + "?" + qs
-        return self.session.get(url).payload
+        kwargs.setdefault('headers', {})
+        kwargs["headers"].setdefault("Accept", "application/json, */*")
+        return self.session.get(url, **kwargs).payload
 
     def refresh(self):
         """GET self.self, update self with its payload and return self."""
