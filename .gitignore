@@ -1,6 +1,7 @@
 .DS_Store
 *.swp
 *.py[cod]
+*.python-version
 *.orig
 cr/lib/tests/datadir/
 venv/
