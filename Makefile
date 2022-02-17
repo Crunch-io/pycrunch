@@ -1,6 +1,8 @@
-# Compatibility for us old-timers.
+# "make" compatibility for us old-timers.
 
 PHONY: check clean develop install test
+
+PYTHON ?= python
 
 #: Same as "check"
 test: check
@@ -15,8 +17,8 @@ clean:
 
 #: Set to run from source
 develop:
-	$(PYTHON) ./setup.py develop
+	$(PYTHON) ./setup.py $@
 
-#: Install package locally without the verbiage
+#: Install this gem
 install:
-	$(PYTHON) ./setup.py install
+	$(PYTHON) ./setup.py $@
