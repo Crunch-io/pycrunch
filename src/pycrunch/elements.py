@@ -24,6 +24,7 @@ being parsed into an instance of Foo, rather than a bare JSONObject.
 import json
 
 import six
+import warnings
 
 from requests.utils import get_environ_proxies
 
@@ -46,16 +47,19 @@ class JSONObject(dict):
 
     @property
     def json(self):
-        return json.dumps(self, indent=None, separators=(',', ':'))
+        return json.dumps(self, indent=None, separators=(",", ":"))
 
     @property
     def pretty(self):
         return json.dumps(self, indent=4)
 
     def __str__(self):
-        return "%s.%s(**%s)" % (self.__module__, self.__class__.__name__,
-                                # __str__ is indented!
-                                json.dumps(self, indent=4))
+        return "%s.%s(**%s)" % (
+            self.__module__,
+            self.__class__.__name__,
+            # __str__ is indented!
+            json.dumps(self, indent=4),
+        )
 
     def __getattr__(self, key):
         # Return the requested attribute if present in self.keys
@@ -63,8 +67,7 @@ class JSONObject(dict):
         if v is not omitted:
             return v
 
-        raise AttributeError(
-            "%s has no attribute %s" % (self.__class__.__name__, key))
+        raise AttributeError("%s has no attribute %s" % (self.__class__.__name__, key))
 
     def copy(self):
         """Return a (shallow) copy of self."""
@@ -76,11 +79,11 @@ class ElementMeta(type):
 
     def __new__(cls, name, bases, d):
         new_type = type.__new__(cls, name, bases, d)
-        if 'element' in d:
+        if "element" in d:
             # Skip any subclass which has no 'element' attribute,
             # (including Element itself!) to allow for additional
             # base classes.
-            elements[d['element']] = new_type
+            elements[d["element"]] = new_type
         return new_type
 
 
@@ -148,8 +151,7 @@ class Document(Element):
                 url = coll[key]
                 return self.session.get(url, headers=headers).payload
 
-        raise AttributeError(
-            "%s has no attribute %s" % (self.__class__.__name__, key))
+        raise AttributeError("%s has no attribute %s" % (self.__class__.__name__, key))
 
     def void(self, key, **members):
         """Return a dummy Document without populating it via HTTP GET.
@@ -187,8 +189,7 @@ class Document(Element):
             if key in coll:
                 return cls(self.session, self=coll[key], **members)
 
-        raise AttributeError(
-            "%s has no attribute %s" % (self.__class__.__name__, key))
+        raise AttributeError("%s has no attribute %s" % (self.__class__.__name__, key))
 
     def follow(self, key, qs=None, **kwargs):
         """GET the payload of the requested collection URL."""
@@ -200,8 +201,7 @@ class Document(Element):
                 break
 
         if url is None:
-            raise AttributeError(
-                "%s has no link %s" % (self.__class__.__name__, key))
+            raise AttributeError("%s has no link %s" % (self.__class__.__name__, key))
 
         if isinstance(qs, dict):
             template_lookups = {"{%s}" % k: k for k in qs.keys()}
@@ -216,7 +216,7 @@ class Document(Element):
         if qs is not None:
             # Remove any existing qs, such as for URI Templates.
             url = url.rsplit("?", 1)[0] + "?" + qs
-        kwargs.setdefault('headers', {})
+        kwargs.setdefault("headers", {})
         kwargs["headers"].setdefault("Accept", "application/json, */*")
         return self.session.get(url, **kwargs).payload
 
@@ -231,21 +231,21 @@ class Document(Element):
         return self
 
     def post(self, data, *args, **kwargs):
-        kwargs.setdefault('headers', {})
+        kwargs.setdefault("headers", {})
         kwargs["headers"].setdefault("Content-Type", "application/json")
         if not isinstance(data, six.string_types):
             data = json.dumps(data)
         return self.session.post(self.self, data, *args, **kwargs)
 
     def put(self, data, *args, **kwargs):
-        kwargs.setdefault('headers', {})
+        kwargs.setdefault("headers", {})
         kwargs["headers"].setdefault("Content-Type", "application/json")
         if not isinstance(data, six.string_types):
             data = json.dumps(data)
         return self.session.put(self.self, data, *args, **kwargs)
 
     def patch(self, data, *args, **kwargs):
-        kwargs.setdefault('headers', {})
+        kwargs.setdefault("headers", {})
         kwargs["headers"].setdefault("Content-Type", "application/json")
         if not isinstance(data, six.string_types):
             data = json.dumps(data)
@@ -253,6 +253,7 @@ class Document(Element):
 
     def delete(self):
         return self.session.delete(self.self)
+
 
 # -------------------------- HTTP request helpers -------------------------- #
 
@@ -274,24 +275,22 @@ class ElementResponseHandler(lemonpy.ResponseHandler):
     the request. That should probably be moved out somewhere else.
     """
 
-    parsers = {
-        'application/json': parse_json_element_from_response
-    }
+    parsers = {"application/json": parse_json_element_from_response}
 
     def status_401(self, r):
         login_url = r.json()["urls"]["login_url"]
         if r.request.url == login_url:
             raise ValueError("Log in was not successful.")
 
-        creds = {'email': self.session.email, 'password': self.session.password}
+        creds = {"email": self.session.email, "password": self.session.password}
         login_r = self.session.post(
             login_url,
             headers={"Content-Type": "application/json"},
-            data=json.dumps(creds)
+            data=json.dumps(creds),
         )
 
         # Repeat the request now that we've logged in. What a hack.
-        r.request.headers['Cookie'] = login_r.headers['Set-Cookie']
+        r.request.headers["Cookie"] = login_r.headers["Set-Cookie"]
         env_proxies = get_environ_proxies(r.request.url, no_proxy=None)
         r2 = self.session.send(r.request, proxies=env_proxies)
 
@@ -304,16 +303,32 @@ class ElementResponseHandler(lemonpy.ResponseHandler):
 
 class ElementSession(lemonpy.Session):
 
-    headers = {
-        "user-agent": "pycrunch/%s" % __version__
-    }
+    headers = {"user-agent": "pycrunch/%s" % __version__}
     handler_class = ElementResponseHandler
 
-    def __init__(self, email=None, password=None, token=None, domain=None,
-                 progress_tracking=None):
-        self.email = email
-        self.password = password
+    def __init__(
+        self, email=None, password=None, token=None, domain=None, progress_tracking=None
+    ):
+        self.__email = email
+        self.__password = password
         self.token = token
         self.domain = domain
         self.progress_tracking = progress_tracking or DefaultProgressTracking()
         super(ElementSession, self).__init__()
+
+    @property
+    def email(self):
+        warnings.warn(
+            "`session.email` is being deprecated. Read from `conn.user.body.email`",
+            PendingDeprecationWarning,
+        )
+        if self.__email is None:
+            self.__email = self.user["body"]["email"]
+        return self.__email
+
+    @property
+    def password(self):
+        warnings.warn(
+            "`session.password` is being deprecated.", PendingDeprecationWarning
+        )
+        return self.__password
