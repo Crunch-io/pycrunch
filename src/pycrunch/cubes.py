@@ -70,6 +70,9 @@ class DimensionsPreparer(object):
     """
 
     def __init__(self, dataset):
+        # If dataset has not fetched from the API, do it now.
+        if not hasattr(dataset, "catalogs"):
+            dataset.refresh()
         self._dataset = dataset
         self._variables_by_alias = dataset.variables.by('alias')
         self._variables_by_name = dataset.variables.by('name')

@@ -14,6 +14,28 @@ import six
 from pycrunch import elements
 from pycrunch.lemonpy import URL, ClientError, ServerError
 
+# Shoji helper functions."""
+
+
+def as_catalog(x, **kwargs):  # -> dict:
+    """Format and return `x` as a shoji catalog dictionary"""
+    return dict(element="shoji:catalog", index=x, **kwargs)
+
+
+def as_entity(body, **kwargs):  #  -> dict:
+    """Return shoji Entity dict with *body* and other attributes passed as *kwargs*."""
+    return dict(element="shoji:entity", body=body, **kwargs)
+
+
+def as_order(x, **kwargs):  # -> dict:
+    """Format and return `x` as a shoji order dictionary"""
+    return dict(element="shoji:order", graph=x, **kwargs)
+
+
+def as_value(x):  # -> dict:
+    """Format and return `x` as a shoji view dictionary"""
+    return {"element": "shoji:view", "value": x}
+
 
 class Tuple(elements.JSONObject):
     """A Shoji Tuple of attributes.
@@ -87,9 +109,9 @@ class Index(elements.JSONObject):
         elements.JSONObject.__init__(self, **members)
 
     def _rel_abs(self, url):
-        if not hasattr(url, 'relative_to'):
+        if not hasattr(url, "relative_to"):
             cat_url = self.catalog_url
-            if '://' in url:
+            if "://" in url:
                 abs_url = URL(url, cat_url)
             else:
                 abs_url = URL(URL(url, cat_url).absolute, cat_url)
@@ -122,7 +144,6 @@ class Index(elements.JSONObject):
 
 
 class CreateMixin(object):
-
     def create(self, entity=None, progress_tracker=None):
         """POST the given Entity to this catalog to create a new resource.
 
@@ -156,15 +177,15 @@ class CreateMixin(object):
             if seeother:
                 # We got a See Other response, this means the resource
                 # was not created because an equivalent one is already available.
-                entity['self'] = URL(seeother[-1].headers['Location'], '')
+                entity["self"] = URL(seeother[-1].headers["Location"], "")
                 return entity
         return self._wait_for_progress(entity, response, progress_tracker)
 
     def _wait_for_progress(self, entity, r, progress_tracker):
-        entity['self'] = URL(r.headers['Location'], '')
+        entity["self"] = URL(r.headers["Location"], "")
         if r.status_code == 202:
             try:
-                progress_url = r.payload['value']  # noqa
+                progress_url = r.payload["value"]  # noqa
             except Exception:
                 # Not a progress API just return the incomplete entity.
                 # User will refresh it.
@@ -186,9 +207,7 @@ class CreateMixin(object):
         specifying attrs which are not hashable will raise an error.
         """
         return elements.JSONObject(
-            (tupl[attr], tupl)
-            for tupl in six.itervalues(self.index)
-            if attr in tupl
+            (tupl[attr], tupl) for tupl in six.itervalues(self.index) if attr in tupl
         )
 
 
@@ -198,11 +217,11 @@ class Catalog(elements.Document, CreateMixin):
     element = "shoji:catalog"
 
     def __init__(__this__, session, **members):
-        if 'self' in members:
-            if not isinstance(members['self'], URL):
-                members['self'] = URL(members['self'], "")
-            if 'index' in members:
-                members['index'] = Index(session, members['self'], **members['index'])
+        if "self" in members:
+            if not isinstance(members["self"], URL):
+                members["self"] = URL(members["self"], "")
+            if "index" in members:
+                members["index"] = Index(session, members["self"], **members["index"])
         super(Catalog, __this__).__init__(session, **members)
 
     def add(self, entity_url, attrs=None, **kwargs):
@@ -237,12 +256,12 @@ class Entity(elements.Document, CreateMixin):
 
     def __init__(__this__, session, **members):
         members.setdefault("body", {})
-        if 'self' in members:
-            if not isinstance(members['self'], URL):
-                members['self'] = URL(members['self'], "")
-            members['body'] = Tuple(session, members['self'], **members['body'])
-            if 'index' in members:
-                members['index'] = Index(session, members['self'], **members['index'])
+        if "self" in members:
+            if not isinstance(members["self"], URL):
+                members["self"] = URL(members["self"], "")
+            members["body"] = Tuple(session, members["self"], **members["body"])
+            if "index" in members:
+                members["index"] = Index(session, members["self"], **members["index"])
         super(Entity, __this__).__init__(session, **members)
 
     def edit(self, **body_attrs):
@@ -259,7 +278,7 @@ class Entity(elements.Document, CreateMixin):
         return super(Entity, self).put(data=entity.json).payload
 
     def wait_progress(self, r, progress_tracker=None):
-        self['self'] = URL(r.headers['Location'], '')
+        self["self"] = URL(r.headers["Location"], "")
         wait_progress(r, self.session, progress_tracker, entity=self)
         return self
 
@@ -283,7 +302,7 @@ def wait_progress(r, session, progress_tracker=None, entity=None):
     `pycrunch.progress.SimpleTextBarProgressTracking` for documentation
     regarding progress trackers.
     """
-    progress_url = r.payload['value']
+    progress_url = r.payload["value"]
 
     if progress_tracker is None:
         progress_tracker = session.progress_tracking
@@ -293,12 +312,12 @@ def wait_progress(r, session, progress_tracker=None, entity=None):
     begin = time.time()
     while timeout is None or time.time() - begin < timeout:
         prog_r = session.get(progress_url)
-        progress = prog_r.payload['value']
+        progress = prog_r.payload["value"]
         progress_tracker.on_progress(progress_state, progress)
-        if progress['progress'] == -1:
+        if progress["progress"] == -1:
             # Completed due to error
-            raise TaskError(progress['message'])
-        elif progress['progress'] == 100:
+            raise TaskError(progress["message"])
+        elif progress["progress"] == 100:
             # Completed with success
             break
         time.sleep(progress_tracker.interval)
@@ -312,22 +331,22 @@ class View(elements.Document):
     element = "shoji:view"
 
     def __init__(__this__, session, **members):
-        if 'self' in members and not isinstance(members['self'], URL):
-            members['self'] = URL(members['self'], "")
+        if "self" in members and not isinstance(members["self"], URL):
+            members["self"] = URL(members["self"], "")
         super(View, __this__).__init__(session, **members)
 
     @property
     def value(self):
-        return self['value']
+        return self["value"]
 
     @value.setter
     def value(self, newvalue):
         """Update the View with the new value."""
-        self['value'] = newvalue
+        self["value"] = newvalue
         super(View, self).put(data=self.json)
 
     def wait_progress(self, r, progress_tracker=None):
-        self['self'] = URL(r.headers['Location'], '')
+        self["self"] = URL(r.headers["Location"], "")
         wait_progress(r, self.session, progress_tracker, entity=self)
         return self
 
@@ -340,29 +359,29 @@ class Order(elements.Document):
     }
 
     def __init__(__this__, session, **members):
-        if 'self' in members and not isinstance(members['self'], URL):
-            members['self'] = URL(members['self'], "")
+        if "self" in members and not isinstance(members["self"], URL):
+            members["self"] = URL(members["self"], "")
         super(Order, __this__).__init__(session, **members)
 
     @property
     def graph(self):
-        return self['graph']
+        return self["graph"]
 
     @graph.setter
     def graph(self, newgraph):
         """Update the Order with the new graph."""
-        self['graph'] = newgraph
+        self["graph"] = newgraph
         super(Order, self).put(data=self.json)
 
 
 class TaskProgressTimeoutError(Exception):
-    def __init__(self, entity, response, timeout=''):
+    def __init__(self, entity, response, timeout=""):
         if timeout:
-            timeout = '%s seconds ' % (timeout, )
+            timeout = "%s seconds " % (timeout,)
         super(TaskProgressTimeoutError, self).__init__(
-            'Task Progress did not complete before {}timeout. '
-            'Trap this exception and call exc.entity.wait_progress(exc.response) '
-            'to wait for completion explicitly.'.format(timeout)
+            "Task Progress did not complete before {}timeout. "
+            "Trap this exception and call exc.entity.wait_progress(exc.response) "
+            "to wait for completion explicitly.".format(timeout)
         )
         self.entity = entity
         self.response = response
