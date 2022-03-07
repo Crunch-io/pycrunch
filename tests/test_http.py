@@ -164,6 +164,6 @@ def test_connect_with_token(mock_sess):
     assert ret == "success"
     mock_sess.assert_called_once_with(
         token="FOO",
-        domain="app.crunch.io",
+        site_url="https://app.crunch.io/api/",
         progress_tracking=None,
     )

@@ -34,10 +34,10 @@ from .version import __version__
 
 try:
     # Python 2
-    from urllib import urlencode, quote
+    from urllib import urlencode, quote, urlparse
 except ImportError:
     # Python 3
-    from urllib.parse import urlencode, quote
+    from urllib.parse import urlencode, quote, urlparse
 
 omitted = object()
 
@@ -282,7 +282,10 @@ class ElementResponseHandler(lemonpy.ResponseHandler):
         if r.request.url == login_url:
             raise ValueError("Log in was not successful.")
 
-        creds = {"email": self.session.email, "password": self.session.password}
+        if self.session.token:
+            creds = {"token": self.session.token}
+        else:
+            creds = {"email": self.session.email, "password": self.session.password}
         login_r = self.session.post(
             login_url,
             headers={"Content-Type": "application/json"},
@@ -307,12 +310,13 @@ class ElementSession(lemonpy.Session):
     handler_class = ElementResponseHandler
 
     def __init__(
-        self, email=None, password=None, token=None, domain=None, progress_tracking=None
+        self, email=None, password=None, token=None, site_url=None, progress_tracking=None
     ):
         self.__email = email
         self.__password = password
         self.token = token
-        self.domain = domain
+        self.site_url = site_url
+        self.domain = urlparse(site_url).netloc
         self.progress_tracking = progress_tracking or DefaultProgressTracking()
         super(ElementSession, self).__init__()
 
@@ -323,7 +327,7 @@ class ElementSession(lemonpy.Session):
             PendingDeprecationWarning,
         )
         if self.__email is None:
-            self.__email = self.user["body"]["email"]
+            self.__email = self.get(self.site_url).payload.user["body"]["email"]
         return self.__email
 
     @property
