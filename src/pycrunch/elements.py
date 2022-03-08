@@ -323,7 +323,7 @@ class ElementSession(lemonpy.Session):
     @property
     def email(self):
         warnings.warn(
-            "`session.email` is being deprecated. Read from `conn.user.body.email`",
+            "`session.email` is being deprecated. Read from `conn.user.body.email`.",
             PendingDeprecationWarning,
         )
         if self.__email is None:

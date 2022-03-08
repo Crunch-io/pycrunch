@@ -1,4 +1,5 @@
 import mock
+import warnings
 from unittest import TestCase
 
 import requests
@@ -236,3 +237,32 @@ class TestDocument(TestCase):
         person = self.Person(session=session_mock, self='some uri')
         person.delete()
         session_mock.delete.assert_called_once_with('some uri')
+
+
+class TestElementSession:
+    def test_email_login(self):
+        email = "test@example.com"
+        password = "1234"
+        session = elements.ElementSession(email=email, password=password)
+        with warnings.catch_warnings(record=True) as w:
+            assert session.email == email
+            assert session.password == password
+        assert w[0].category is PendingDeprecationWarning
+        assert w[0].message.args[0] == "`session.email` is being deprecated. Read from `conn.user.body.email`."
+        assert w[1].category is PendingDeprecationWarning
+        assert w[1].message.args[0] == "`session.password` is being deprecated."
+
+    def test_domain(self):
+        site_url = "https://subdomain.example.com/api"
+        session = elements.ElementSession(site_url=site_url)
+        assert session.domain == "subdomain.example.com"
+
+    def test_token_login(self):
+        email = "test@example.com"
+        site_url = "https://www.example.com/api"
+        session = elements.ElementSession(token="abc", site_url=site_url)
+        root_mock = mock.MagicMock()
+        root_mock.user = {"body": {"email": email}}
+        with mock.patch.object(session, "get") as get:
+            get.return_value = mock.MagicMock(payload=root_mock)
+            assert session.email == email
