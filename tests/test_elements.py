@@ -266,3 +266,16 @@ class TestElementSession:
         with mock.patch.object(session, "get") as get:
             get.return_value = mock.MagicMock(payload=root_mock)
             assert session.email == email
+
+    def test_response_handler_email_session(self):
+        email = "test@example.com"
+        password = "1234"
+        session = elements.ElementSession(email=email, password=password)
+        handler = elements.ElementResponseHandler(session)
+        assert handler.auth_credentials() == {"email": email, "password": password}
+
+    def test_response_handler_token_session(self):
+        token = "abc"
+        session = elements.ElementSession(token=token)
+        handler = elements.ElementResponseHandler(session)
+        assert handler.auth_credentials() == {"token": token}
