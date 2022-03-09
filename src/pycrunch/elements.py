@@ -277,16 +277,6 @@ class ElementResponseHandler(lemonpy.ResponseHandler):
 
     parsers = {"application/json": parse_json_element_from_response}
 
-    def auth_credentials(self):
-        """
-        Returns the credentials used to auth this session.
-        """
-        if self.session.token:
-            creds = {"token": self.session.token}
-        else:
-            creds = {"email": self.session.email, "password": self.session.password}
-        return creds
-
     def status_401(self, r):
         login_url = r.json()["urls"]["login_url"]
         if r.request.url == login_url:
@@ -294,7 +284,11 @@ class ElementResponseHandler(lemonpy.ResponseHandler):
             # an authentication attempt. It means the login failed.
             raise ValueError("Log in was not successful.")
 
-        creds = self.auth_credentials()
+        if self.session.token:
+            # Do not re-attempt login if this is an API key session.
+            return r
+
+        creds = {"email": self.session.email, "password": self.session.password}
         login_r = self.session.post(
             login_url,
             headers={"Content-Type": "application/json"},
