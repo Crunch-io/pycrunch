@@ -241,8 +241,8 @@ def connect(user="", pw="", site_url="https://app.crunch.io/api/",
     if api_key:
         sess = session_class(
             token=api_key,
-            domain=urllib.parse.urlparse(site_url).netloc,
-            progress_tracking=progress_tracking
+            site_url=site_url,
+            progress_tracking=progress_tracking,
         )
     elif user and pw:
         warnings.warn(

@@ -34,10 +34,10 @@ from .version import __version__
 
 try:
     # Python 2
-    from urllib import urlencode, quote
+    from urllib import urlencode, quote, urlparse
 except ImportError:
     # Python 3
-    from urllib.parse import urlencode, quote
+    from urllib.parse import urlencode, quote, urlparse
 
 omitted = object()
 
@@ -280,7 +280,13 @@ class ElementResponseHandler(lemonpy.ResponseHandler):
     def status_401(self, r):
         login_url = r.json()["urls"]["login_url"]
         if r.request.url == login_url:
+            # This means that the requests was made on the login_url, so it was
+            # an authentication attempt. It means the login failed.
             raise ValueError("Log in was not successful.")
+
+        if self.session.token:
+            # Do not re-attempt login if this is an API key session.
+            return r
 
         creds = {"email": self.session.email, "password": self.session.password}
         login_r = self.session.post(
@@ -307,23 +313,24 @@ class ElementSession(lemonpy.Session):
     handler_class = ElementResponseHandler
 
     def __init__(
-        self, email=None, password=None, token=None, domain=None, progress_tracking=None
+        self, email=None, password=None, token=None, site_url=None, progress_tracking=None
     ):
         self.__email = email
         self.__password = password
         self.token = token
-        self.domain = domain
+        self.site_url = site_url
+        self.domain = urlparse(site_url).netloc
         self.progress_tracking = progress_tracking or DefaultProgressTracking()
         super(ElementSession, self).__init__()
 
     @property
     def email(self):
         warnings.warn(
-            "`session.email` is being deprecated. Read from `conn.user.body.email`",
+            "`session.email` is being deprecated. Read from `conn.user.body.email`.",
             PendingDeprecationWarning,
         )
         if self.__email is None:
-            self.__email = self.user["body"]["email"]
+            self.__email = self.get(self.site_url).payload.user["body"]["email"]
         return self.__email
 
     @property
