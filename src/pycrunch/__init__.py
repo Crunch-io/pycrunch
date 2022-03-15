@@ -251,7 +251,7 @@ def connect(user="", pw="", site_url="https://app.crunch.io/api/",
         )
 
         sess = session_class(
-            user, pw, progress_tracking=progress_tracking
+            user, pw, progress_tracking=progress_tracking, site_url=site_url
         )
     else:
         raise RuntimeError("You must provide either a user and pw or an api_key")
