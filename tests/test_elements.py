@@ -284,7 +284,21 @@ class TestElementSession(TestCase):
             root = session.root
         assert root == api_root
 
-    def test_require_host(self):
+    def test_root_no_site_url(self):
+        email = "abc@example.com"
+        session = elements.ElementSession(email=email, password="abx")
+        with self.assertRaises(ValueError) as err:
+            _ = session.root
+        assert str(err.exception) == "Session must be initialized with `site_url`"
+
+    def test_require_host_with_token(self):
         with self.assertRaises(ValueError) as err:
             elements.ElementSession(token="abc")
         assert str(err.exception) == "Must include a `site_url` host to connect to"
+
+    def test_host_not_required_on_email(self):
+        email = "abc@example.com"
+        session = elements.ElementSession(email=email, password="abx")
+        assert session.site_url is None
+        assert session.email is email
+

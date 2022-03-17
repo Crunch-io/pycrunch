@@ -316,18 +316,20 @@ class ElementSession(lemonpy.Session):
     def __init__(
         self, email=None, password=None, token=None, site_url=None, progress_tracking=None
     ):
-        if not site_url:
+        if not site_url and token:
             raise ValueError("Must include a `site_url` host to connect to")
         self.__email = email
         self.__password = password
         self.token = token
         self.site_url = site_url
-        self.domain = urlparse(site_url).netloc
+        self.domain = urlparse(site_url).netloc if site_url else None
         self.progress_tracking = progress_tracking or DefaultProgressTracking()
         super(ElementSession, self).__init__()
 
     @property
     def root(self):
+        if not self.site_url:
+            raise ValueError("Session must be initialized with `site_url`")
         return self.get(self.site_url).payload
 
     @property
