@@ -20,7 +20,7 @@ class TestHTTPRequests(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.s = Session("not an email", "not a password")
+        cls.s = Session("not an email", "not a password", site_url="https://app.crunch.io/api/")
         cls.r = cls.s.get("http://httpbin.org/headers")
 
     def test_request_sends_user_agent(self):
@@ -55,7 +55,7 @@ class TestHTTPResponses(TestCase):
         patch = mock.patch('requests.adapters.HTTPAdapter.send', _resp)
 
         patch.start()
-        s = Session("not an email", "not a password")
+        s = Session("not an email", "not a password", site_url="https://app.crunch.io/api/")
         with self.assertRaises(ServerError) as exc_info:
             s.get("http://httpbin.org/status/504")
         patch.stop()
@@ -65,7 +65,7 @@ class TestHTTPResponses(TestCase):
         self.assertEqual(response.status_code, 504)
 
     def test_401_handle_calls_proxies(self):
-        sess = Session("not an email", "not a password")
+        sess = Session("not an email", "not a password", site_url="https://app.crunch.io/api/")
         headers = {'Set-Cookie': 'abx'}
         sess.post = lambda slf, *args, **kwargs: mock.MagicMock(headers=headers)
         sess.send = mock.MagicMock()
@@ -106,6 +106,7 @@ def test_connect(mock_sess):
             "me@mycompany.com",
             "yourpassword",
             session_class=mock_sess,
+            site_url="https://app.crunch.io/api/",
         )
 
     warns = {(warn.category, warn.message.args[0]) for warn in warninfo}
@@ -119,6 +120,7 @@ def test_connect(mock_sess):
         "me@mycompany.com",
         "yourpassword",
         progress_tracking=None,
+        site_url="https://app.crunch.io/api/",
     )
 
 
@@ -127,6 +129,7 @@ def test_connect_with_api_key(mock_sess):
         "me@mycompany.com",
         "yourpassword",
         session_class=mock_sess,
+        site_url="https://app.crunch.io/api/",
     )
 
     assert ret == "success"
@@ -134,6 +137,7 @@ def test_connect_with_api_key(mock_sess):
         "me@mycompany.com",
         "yourpassword",
         progress_tracking=None,
+        site_url="https://app.crunch.io/api/",
     )
 
 

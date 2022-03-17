@@ -239,11 +239,13 @@ class TestDocument(TestCase):
         session_mock.delete.assert_called_once_with('some uri')
 
 
-class TestElementSession:
+class TestElementSession(TestCase):
+    site_url = "https://www.example.com/api"
+
     def test_email_login(self):
         email = "test@example.com"
         password = "1234"
-        session = elements.ElementSession(email=email, password=password)
+        session = elements.ElementSession(email=email, password=password, site_url=self.site_url)
         with warnings.catch_warnings(record=True) as w:
             assert session.email == email
             assert session.password == password
@@ -259,8 +261,7 @@ class TestElementSession:
 
     def test_token_login(self):
         email = "test@example.com"
-        site_url = "https://www.example.com/api"
-        session = elements.ElementSession(token="abc", site_url=site_url)
+        session = elements.ElementSession(token="abc", site_url=self.site_url)
         root_mock = mock.MagicMock()
         root_mock.user = {"body": {"email": email}}
         with mock.patch.object(session, "get") as get:
@@ -269,8 +270,35 @@ class TestElementSession:
 
     def test_response_handler_token_session(self):
         token = "abc"
-        session = elements.ElementSession(token=token)
+        session = elements.ElementSession(token=token, site_url=self.site_url)
         handler = elements.ElementResponseHandler(session)
         response = mock.MagicMock()
         # Since this is a token session. Do not attempt to re-login
         assert handler.status_401(response) is response
+
+    def test_root(self):
+        session = elements.ElementSession(token="abc", site_url=self.site_url)
+        api_root = {"site": "root"}
+        with mock.patch.object(session, "get") as get:
+            get.return_value = mock.MagicMock(payload=api_root)
+            root = session.root
+        assert root == api_root
+
+    def test_root_no_site_url(self):
+        email = "abc@example.com"
+        session = elements.ElementSession(email=email, password="abx")
+        with self.assertRaises(ValueError) as err:
+            _ = session.root
+        assert str(err.exception) == "Session must be initialized with `site_url`"
+
+    def test_require_host_with_token(self):
+        with self.assertRaises(ValueError) as err:
+            elements.ElementSession(token="abc")
+        assert str(err.exception) == "Must include a `site_url` host to connect to"
+
+    def test_host_not_required_on_email(self):
+        email = "abc@example.com"
+        session = elements.ElementSession(email=email, password="abx")
+        assert session.site_url is None
+        assert session.email is email
+
