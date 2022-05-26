@@ -150,7 +150,10 @@ class Document(Element):
             coll = self.get(collname, {})
             if key in coll:
                 url = coll[key]
-                return self.session.get(url, headers=headers).payload
+                response = self.session.get(url, headers=headers)
+                if response.status_code not in {401}:
+                    return response.payload
+                raise ValueError(response.json()["exception"][0])
 
         raise AttributeError("%s has no attribute %s" % (self.__class__.__name__, key))
 
