@@ -22,23 +22,24 @@ being parsed into an instance of Foo, rather than a bare JSONObject.
 """
 
 import json
-
-import six
 import warnings
 
+import six
 from requests.utils import get_environ_proxies
 
 from pycrunch import lemonpy
 from pycrunch.progress import DefaultProgressTracking
+
 from .version import __version__
 
 try:
     # Python 2
-    from urllib import urlencode, quote
+    from urllib import quote, urlencode
+
     from urlparse import urlparse
 except ImportError:
     # Python 3
-    from urllib.parse import urlencode, quote, urlparse
+    from urllib.parse import quote, urlencode, urlparse
 
 omitted = object()
 
@@ -150,7 +151,10 @@ class Document(Element):
             coll = self.get(collname, {})
             if key in coll:
                 url = coll[key]
-                return self.session.get(url, headers=headers).payload
+                response = self.session.get(url, headers=headers)
+                if response.status_code not in {401}:
+                    return response.payload
+                raise ValueError("Unauthorized")
 
         raise AttributeError("%s has no attribute %s" % (self.__class__.__name__, key))
 
@@ -314,7 +318,12 @@ class ElementSession(lemonpy.Session):
     handler_class = ElementResponseHandler
 
     def __init__(
-        self, email=None, password=None, token=None, site_url=None, progress_tracking=None
+        self,
+        email=None,
+        password=None,
+        token=None,
+        site_url=None,
+        progress_tracking=None,
     ):
         if not site_url and token:
             raise ValueError("Must include a `site_url` host to connect to")
