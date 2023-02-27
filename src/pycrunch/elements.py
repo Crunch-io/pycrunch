@@ -293,11 +293,10 @@ class ElementResponseHandler(lemonpy.ResponseHandler):
             # Do not re-attempt login if this is an API key session.
             return r
 
-        creds = {"email": self.session.email, "password": self.session.password}
         login_r = self.session.post(
             login_url,
             headers={"Content-Type": "application/json"},
-            data=json.dumps(creds),
+            data=json.dumps(self.session.credentials),
         )
 
         # Repeat the request now that we've logged in. What a hack.
@@ -333,6 +332,10 @@ class ElementSession(lemonpy.Session):
         self.site_url = site_url
         self.domain = urlparse(site_url).netloc if site_url else None
         self.progress_tracking = progress_tracking or DefaultProgressTracking()
+        if self.token:
+            self.credentials = {"api_key": token}
+        else:
+            self.credentials = {"email": email, "password": password}
         super(ElementSession, self).__init__()
 
     @property
