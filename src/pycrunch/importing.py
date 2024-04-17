@@ -52,6 +52,25 @@ class Importer(object):
         else:
             raise ValueError("The batch did not reach the '%s' state in the "
                              "given time. Please check again later." % status)
+    
+    def add_schema_metadata(self, ds, source_url, filename, fp, mimetype, schema, metadata):
+        response = ds.session.post(
+            source_url, 
+            files={
+                "uploaded_file": (filename, fp, mimetype)
+            },
+            data={
+                "schema": schema, 
+                "metadata": metadata,
+            }
+        )
+        return response
+    
+    def debug_source_payload(self, ds, source_url):
+        r = ds.session.get(source_url)
+        if r.payload is None:
+            raise TypeError("Response could not be parsed.", r)
+        return r.payload
 
     def add_source(self, ds, filename, fp, mimetype):
         """Create a new Source on the given dataset and return its URL."""
