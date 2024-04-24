@@ -62,15 +62,17 @@ class Importer(object):
             data={
                 "schema": schema, 
                 "metadata": metadata,
+                "crunchlake": "create",
+                "dataset_id": ds.get("self", "").split("/")[-2]
             }
         )
-        return response
-    
-    def debug_source_payload(self, ds, source_url):
-        r = ds.session.get(source_url)
-        if r.payload is None:
-            raise TypeError("Response could not be parsed.", r)
-        return r.payload
+
+        return shoji.Entity(ds.session, body={
+                "status_code": response.status_code,
+                "payload": response.payload, 
+                "source_url": response.headers.get("Location")
+            }
+        )
 
     def add_source(self, ds, filename, fp, mimetype):
         """Create a new Source on the given dataset and return its URL."""
