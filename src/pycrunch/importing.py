@@ -59,8 +59,8 @@ class Importer(object):
 
         Parameters:
         site (shoji.Catalog): a shoji Catalog object, from which we acquire session and sources url
-        schema (str): json string containing schema
-        metadata (str): json string containing metadata
+        schema (dict): json string containing schema
+        metadata (dict): json string containing metadata
         filename (str): name of file being uploaded
         fp (BufferedReader): opened file object
         mimetype (str): mimetype of file being uploaded
@@ -74,8 +74,8 @@ class Importer(object):
                 "uploaded_file": (filename, fp, mimetype)
             },
             data={
-                "schema": schema, 
-                "metadata": metadata,
+                "schema": json.dumps(schema), 
+                "metadata": json.dumps(metadata),
                 "crunchlake": "create",
                 "dataset_id": "None"
             }
