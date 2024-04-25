@@ -283,7 +283,6 @@ class ElementResponseHandler(lemonpy.ResponseHandler):
     parsers = {"application/json": parse_json_element_from_response}
 
     def status_401(self, r):
-        print(r.json())
         login_url = r.json()["urls"]["login_url"]
         if r.request.url == login_url:
             # This means that the requests was made on the login_url, so it was

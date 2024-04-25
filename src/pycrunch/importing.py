@@ -66,7 +66,7 @@ class Importer(object):
         mimetype (str): mimetype of file being uploaded
 
         Returns:
-        shoji.Entity: Shoji entity containing the payload, status_code and source_url of uploaded file
+        shoji.Entity: Shoji entity containing the source url
         """
         response = site.session.post(
             site.catalogs.sources, 
@@ -80,12 +80,7 @@ class Importer(object):
                 "dataset_id": "None"
             }
         )
-        return shoji.Entity(site.session, body={
-                "status_code": response.status_code,
-                "payload": response.payload, 
-                "source_url": response.headers.get("Location")
-            }
-        )
+        return shoji.Entity(self=response.headers.get("Location"), session=site.session)
 
     def add_source(self, ds, filename, fp, mimetype):
         """Create a new Source on the given dataset and return its URL."""
