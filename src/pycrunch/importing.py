@@ -53,9 +53,23 @@ class Importer(object):
             raise ValueError("The batch did not reach the '%s' state in the "
                              "given time. Please check again later." % status)
     
-    def add_schema_metadata(self, ds, source_url, filename, fp, mimetype, schema, metadata):
-        response = ds.session.post(
-            source_url, 
+    def add_schema_metadata(self, site, schema, metadata, filename, fp, mimetype="application/x-parquet"):
+        """
+        Create a new Source from a parquet file using schema and metadata.
+
+        Parameters:
+        site (shoji.Catalog): a shoji Catalog object, from which we acquire session and sources url
+        schema (str): json string containing schema
+        metadata (str): json string containing metadata
+        filename (str): name of file being uploaded
+        fp (BufferedReader): opened file object
+        mimetype (str): mimetype of file being uploaded
+
+        Returns:
+        shoji.Entity: Shoji entity containing the payload, status_code and source_url of uploaded file
+        """
+        response = site.session.post(
+            site.catalogs.sources, 
             files={
                 "uploaded_file": (filename, fp, mimetype)
             },
@@ -63,11 +77,10 @@ class Importer(object):
                 "schema": schema, 
                 "metadata": metadata,
                 "crunchlake": "create",
-                "dataset_id": ds.get("self", "").split("/")[-2]
+                "dataset_id": "None"
             }
         )
-
-        return shoji.Entity(ds.session, body={
+        return shoji.Entity(site.session, body={
                 "status_code": response.status_code,
                 "payload": response.payload, 
                 "source_url": response.headers.get("Location")
