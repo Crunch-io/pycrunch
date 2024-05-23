@@ -53,7 +53,7 @@ class Importer(object):
             raise ValueError("The batch did not reach the '%s' state in the "
                              "given time. Please check again later." % status)
 
-    def add_source(self, ds, filename, fp, mimetype, data={}):
+    def add_source(self, ds, filename, fp, mimetype, data=None):
         """Create a new Source on the given dataset and return its URL."""
         sources_url = ds.user_url.catalogs['sources']
         # Don't call Catalog.post here (which would force application/json);
