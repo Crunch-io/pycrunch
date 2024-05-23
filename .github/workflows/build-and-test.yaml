@@ -13,8 +13,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-20.04
-    container:
-      image: python:${{ matrix.python-version }}-slim
     strategy:
       max-parallel: 4
       matrix:
