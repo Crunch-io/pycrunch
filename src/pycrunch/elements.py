@@ -389,4 +389,4 @@ class UnsafeElementSession(ElementSession):
 
         if self.token:
             # Use Bearer token for authentication
-            self.headers.update({"Authorization": f"Bearer {self.token}"})
+            self.headers.update({"Authorization": "Bearer {}".format(self.token)})
