@@ -360,3 +360,33 @@ class ElementSession(lemonpy.Session):
             "`session.password` is being deprecated.", PendingDeprecationWarning
         )
         return self.__password
+
+
+class UnsafeElementSession(ElementSession):
+    """
+    A subclass of ElementSession that disables SSL/TLS verification.
+    This is mean to be used for development purposes only.
+    """
+
+    def __init__(
+        self,
+        email=None,
+        password=None,
+        token=None,
+        site_url=None,
+        progress_tracking=None,
+    ):
+        super(UnsafeElementSession, self).__init__(
+            email,
+            password,
+            token,
+            site_url,
+            progress_tracking,
+        )
+
+        # Skip SSL/TLS verification
+        self.verify = False
+
+        if self.token:
+            # Use Bearer token for authentication
+            self.headers.update({"Authorization": "Bearer {}".format(self.token)})

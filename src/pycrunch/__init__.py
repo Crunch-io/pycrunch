@@ -195,6 +195,8 @@ from pycrunch.version import __version__
 
 Session = elements.ElementSession
 
+UnsafeSession = elements.UnsafeElementSession
+
 __all__ = [
     'cubes',
     'elements',
