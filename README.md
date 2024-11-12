@@ -128,11 +128,15 @@ each Tuple in a catalog's index, which follows the link to the Entity resource:
         }
     })
 
+### Creating a New Dataset
+
 You typically add new resources to a Catalog via its `create` method:
 
     >>> ds = site.datasets.create({"body": {
-            'name': "My first dataset"
-        }}, refresh=True)
+            "name": "My first dataset",
+            "project": "https://your-domain.crunch.io/api/projects/dbf9foo7b727/"
+        }})
+    >>> ds.refresh()
     >>> gender = ds.variables.create({"body": {
             'name': 'Gender',
             'alias': 'gender',
@@ -143,15 +147,37 @@ You typically add new resources to a Catalog via its `create` method:
                 {'id': 2, 'name': 'F', 'numeric_value': None, 'missing': False}
             ],
             'values': [1, 2, {"?": -1}, 2]
-        }}, refresh=True)
-    >>> print(ds.table.data)
+        }})
+    >>> print(ds.table.metadata)
     pycrunch.elements.JSONObject(**{
-        "e7f361628": [
-            1,
-            2,
-            {"?": -1},
-            2
-        ]
+        "dbebef213d3d413398f0c4075acb05a7": {
+            "alias": "gender",
+            "name": "Gender",
+            "type": "categorical",
+            "description": "",
+            "notes": "",
+            "derived": false,
+            "categories": [
+                {
+                    "missing": true,
+                    "numeric_value": null,
+                    "id": -1,
+                    "name": "No Data"
+                },
+                {
+                    "missing": false,
+                    "numeric_value": null,
+                    "id": 1,
+                    "name": "M"
+                },
+                {
+                    "missing": false,
+                    "numeric_value": null,
+                    "id": 2,
+                    "name": "F"
+                }
+            ]
+        }
     })
 
 To access a Pandas Dataframe of the data in your dataset:
