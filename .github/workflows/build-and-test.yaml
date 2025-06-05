@@ -17,7 +17,6 @@ jobs:
       max-parallel: 4
       matrix:
         python-version:
-          - 2.7
           - 3.6
           - 3.7
           - 3.8
@@ -25,7 +24,6 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Set up Python ${{ matrix.python-version }}
-      if: matrix.python-version != '2.7'
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
@@ -38,7 +36,7 @@ jobs:
     - name: Test with tox ${{env.TOXENV}}
       if: matrix.python-version == '3.6'
       env:
-        TOXENV: py27,py36,coverage
+        TOXENV: py36,coverage
       run: tox
 
     - name: Test with tox Python 3.7
