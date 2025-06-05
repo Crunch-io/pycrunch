@@ -42,8 +42,8 @@ def dimension_string_fixture(request):
     dim_str, str_type, dim, subvar = request.param
     preparer = DimensionsPreparer(Mock())
     preparer._dataset.variables.index = dict()
-    preparer._variables_by_alias = dict()
-    preparer._variables_by_name = dict()
+    preparer._variables_by_alias_cache = dict()
+    preparer._variables_by_name_cache = dict()
     if str_type == 'URL':
         preparer._dataset.variables.index[dim_str] = dim
     elif str_type == 'URL_SUBVAR':
