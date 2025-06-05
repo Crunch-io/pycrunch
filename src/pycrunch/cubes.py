@@ -74,8 +74,27 @@ class DimensionsPreparer(object):
         if not hasattr(dataset, "catalogs"):
             dataset.refresh()
         self._dataset = dataset
-        self._variables_by_alias = dataset.variables.by('alias')
-        self._variables_by_name = dataset.variables.by('name')
+        self._variables_cache = None
+        self._variables_by_alias_cache = None
+        self._variables_by_name_cache = None
+
+    @property
+    def _variables(self):
+        if self._variables_cache is None:
+            self._variables_cache = self._dataset.variables
+        return self._variables_cache
+
+    @property
+    def _variables_by_alias(self):
+        if self._variables_by_alias_cache is None:
+            self._variables_by_alias_cache = self._variables.by("alias")
+        return self._variables_by_alias_cache
+
+    @property
+    def _variables_by_name(self):
+        if self._variables_by_name_cache is None:
+            self._variables_by_name_cache = self._variables.by("name")
+        return self._variables_by_name_cache
 
     def prepare_dimensions(self, dimensions):
         """Return list of crunch expressions for each cube dimension.
@@ -107,17 +126,16 @@ class DimensionsPreparer(object):
 
         :param dim_str: String representing URL, Name, or Alias of a variable
         """
-
-        if dim_str in self._dataset.variables.index:
+        if dim_str in self._variables.index:
             # When URL is provided, fetch variable from index
-            return self._dataset.variables.index[dim_str]
+            return self._variables.index[dim_str]
         elif dim_str in self._variables_by_alias:
             return self._variables_by_alias[dim_str]
         elif dim_str in self._variables_by_name:
             return self._variables_by_name[dim_str]
         elif 'subvariables/' in dim_str:
             var_url = dim_str.split('subvariables/')[0]
-            variable = self._dataset.variables.index[var_url]
+            variable = self._variables.index[var_url]
             return variable.entity.subvariables.index[dim_str]
 
         raise ValueError("Can't find variable {} in dataset {}".format(
