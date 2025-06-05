@@ -1,3 +1,6 @@
+import json
+import threading
+import sys
 from unittest import TestCase
 
 import pytest
@@ -16,27 +19,55 @@ except ImportError:
     import mock
 
 
-class TestHTTPRequests(TestCase):
+@pytest.fixture(scope="module")
+def http_server():
+    import http.server
+    class Handler(http.server.BaseHTTPRequestHandler):
+        def do_GET(self):
+            if self.path == '/headers':
+                reply = json.dumps({"headers":dict(self.headers)}).encode()
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+            else:
+                self.send_response(404)
+                self.send_header('Content-Type', 'text/plain')
+                reply = b"Not found"
+            self.send_header('Content-Length', len(reply))
+            self.end_headers()
+            self.wfile.write(reply)
 
-    @classmethod
-    def setUpClass(cls):
-        cls.s = Session("not an email", "not a password", site_url="https://app.crunch.io/api/")
-        cls.r = cls.s.get("http://httpbin.org/headers")
+    server = http.server.HTTPServer(("127.0.0.1", 0), Handler)
+    task = threading.Thread(target=server.serve_forever, daemon=True)
+    task.start()
+    yield server
+    server.shutdown()
+    server.server_close()
+    task.join(timeout=1)
 
-    def test_request_sends_user_agent(self):
-        pycrunch_ua = 'pycrunch/%s' % __version__
-        req_headers_sent = self.r.request.headers
-        req_headers_received = self.r.json()['headers']
-        self.assertTrue('user-agent' in req_headers_sent)
-        self.assertTrue('User-Agent' in req_headers_received)
-        self.assertTrue(pycrunch_ua in req_headers_sent.get('user-agent', ''))
-        self.assertTrue(pycrunch_ua in req_headers_received.get('User-Agent', ''))
 
-    def test_request_sends_gzip(self):
-        req_headers_sent = self.r.request.headers
-        req_headers_received = self.r.json()['headers']
-        self.assertIn("gzip", req_headers_sent['Accept-Encoding'])
-        self.assertIn("gzip", req_headers_received['Accept-Encoding'])
+@pytest.mark.skipif(sys.version_info < (3, 4), reason="requires python 3.4 or higher")
+def test_request_sends_user_agent(http_server):
+    session = Session("not an email", "not a password", site_url="https://app.crunch.io/api/")
+    url = "http://127.0.0.1:{}/headers".format(http_server.server_port)
+    pycrunch_ua = 'pycrunch/%s' % __version__
+    response = session.get(url)
+    req_headers_sent = response.request.headers
+    req_headers_received = response.json()['headers']
+    assert 'user-agent' in req_headers_sent
+    assert 'user-agent' in req_headers_received
+    assert pycrunch_ua in req_headers_sent.get('user-agent', '')
+    assert pycrunch_ua in req_headers_received.get('user-agent', '')
+
+
+@pytest.mark.skipif(sys.version_info < (3, 4), reason="requires python 3.4 or higher")
+def test_request_sends_gzip(http_server):
+    session = Session("not an email", "not a password", site_url="https://app.crunch.io/api/")
+    url = "http://127.0.0.1:{}/headers".format(http_server.server_port)
+    response = session.get(url)
+    req_headers_sent = response.request.headers
+    req_headers_received = response.json()['headers']
+    assert "gzip" in req_headers_sent['Accept-Encoding']
+    assert "gzip" in req_headers_received['Accept-Encoding']
 
 
 class TestHTTPResponses(TestCase):
