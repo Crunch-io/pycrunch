@@ -3,6 +3,7 @@ import warnings
 from unittest import TestCase
 
 import requests
+import six
 
 from pycrunch import elements, shoji
 
@@ -38,7 +39,7 @@ class TestJSONObject(TestCase):
     def test_attribute_error(self):
         foo = self.Foo(bar=42)
         msg = 'Foo has no attribute nope'
-        self.assertRaisesRegexp(AttributeError, msg, getattr, foo, 'nope')
+        six.assertRaisesRegex(self, AttributeError, msg, getattr, foo, 'nope')
 
     def test_copy(self):
         foo = self.Foo(bar=42)
@@ -165,7 +166,7 @@ class TestDocument(TestCase):
     def test_follow_no_link(self):
         person = self.Person(session=None, self='some uri')
         msg = 'Person has no link foo'
-        self.assertRaisesRegexp(AttributeError, msg, person.follow, 'foo')
+        six.assertRaisesRegex(self, AttributeError, msg, person.follow, 'foo')
 
     def test_refresh(self):
         before = {
@@ -199,7 +200,7 @@ class TestDocument(TestCase):
 
         person = self.Person(session=session_mock, self='some uri')
         msg = 'Response could not be parsed.'
-        self.assertRaisesRegexp(TypeError, msg, person.refresh)
+        six.assertRaisesRegex(self, TypeError, msg, person.refresh)
         session_mock.get.assert_called_once_with('some uri')
 
     def test_post(self):
