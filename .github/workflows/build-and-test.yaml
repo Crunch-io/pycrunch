@@ -17,7 +17,6 @@ jobs:
       max-parallel: 4
       matrix:
         python-version:
-          - 3.6
           - 3.7
           - 3.8
           - 3.9
@@ -32,12 +31,6 @@ jobs:
       run: |
         pip install --upgrade pip
         pip install tox tox-gh-actions
-
-    - name: Test with tox ${{env.TOXENV}}
-      if: matrix.python-version == '3.6'
-      env:
-        TOXENV: py36,coverage
-      run: tox
 
     - name: Test with tox Python 3.7
       if: matrix.python-version == '3.7'
@@ -57,8 +50,8 @@ jobs:
         TOXENV: py39
       run: tox
 
-    - name: Lint Test with tox Python 3.6
-      if: matrix.python-version == '3.6'
+    - name: Lint Test with tox Python 3.9
+      if: matrix.python-version == '3.9'
       env:
         TOXENV: lint
       run: tox
