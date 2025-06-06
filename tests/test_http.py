@@ -2,6 +2,7 @@ from unittest import TestCase
 
 import pytest
 import requests
+import requests_mock
 
 from pycrunch import connect, connect_with_token, Session, __version__
 from pycrunch.lemonpy import ServerError
@@ -18,25 +19,23 @@ except ImportError:
 
 class TestHTTPRequests(TestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        cls.s = Session("not an email", "not a password", site_url="https://app.crunch.io/api/")
-        cls.r = cls.s.get("http://httpbin.org/headers")
+    def setUp(self):
+        self.s = Session("not an email", "not a password", site_url="https://app.crunch.io/api/")
+        adapter = requests_mock.Adapter()
+        adapter.register_uri('GET', "http://httpbin.org/headers", text='data')
+        self.s.mount("mock://", adapter)
 
     def test_request_sends_user_agent(self):
         pycrunch_ua = 'pycrunch/%s' % __version__
-        req_headers_sent = self.r.request.headers
-        req_headers_received = self.r.json()['headers']
-        self.assertTrue('user-agent' in req_headers_sent)
-        self.assertTrue('User-Agent' in req_headers_received)
-        self.assertTrue(pycrunch_ua in req_headers_sent.get('user-agent', ''))
-        self.assertTrue(pycrunch_ua in req_headers_received.get('User-Agent', ''))
+        resp = self.s.get('http://httpbin.org/headers')
+        req_headers_sent = resp.request.headers
+        assert 'user-agent' in req_headers_sent
+        assert pycrunch_ua in req_headers_sent.get('user-agent', '')
 
     def test_request_sends_gzip(self):
-        req_headers_sent = self.r.request.headers
-        req_headers_received = self.r.json()['headers']
+        resp = self.s.get('http://httpbin.org/headers')
+        req_headers_sent = resp.request.headers
         self.assertIn("gzip", req_headers_sent['Accept-Encoding'])
-        self.assertIn("gzip", req_headers_received['Accept-Encoding'])
 
 
 class TestHTTPResponses(TestCase):
