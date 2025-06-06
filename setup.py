@@ -27,6 +27,7 @@ requires = [
 
 tests_requires = [
     'mock',
+    'requests-mock',
     'pytest',
     'pytest-cov',
 ]
