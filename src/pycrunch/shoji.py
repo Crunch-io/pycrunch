@@ -193,6 +193,9 @@ class CreateMixin(object):
             else:
                 # We have a progress_url, wait for completion
                 entity.wait_progress(r, progress_tracker)
+        elif r.status_code == 201 and r.payload and "body" in r.payload:
+            # Server returned the created entity body, use it
+            entity["body"].update(r.payload["body"])
         return entity
 
     def by(self, attr):
