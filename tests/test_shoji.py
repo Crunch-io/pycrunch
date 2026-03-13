@@ -211,7 +211,8 @@ class TestShojiCreation(TestCase):
         location = 'http://host.com/somewhere'
         sess.post = mock.MagicMock(return_value=self._mkresp(
             status_code=201,
-            headers={'Location': location}
+            headers={'Location': location},
+            payload=None
         ))
         catalog = Catalog(self='http://host.com/catalog', session=sess)
         body = {
