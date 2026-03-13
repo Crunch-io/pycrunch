@@ -179,6 +179,33 @@ class TestShojiCreation(TestCase):
             headers={'Content-Type': 'application/json'}
         )
 
+    def test_create_201_updates_entity_body_from_response(self):
+        sess = mock.MagicMock()
+        location = 'http://host.com/somewhere'
+        sess.post = mock.MagicMock(return_value=self._mkresp(
+            status_code=201,
+            headers={'Location': location},
+            payload={'element': 'shoji:entity', 'body': {'name': 'server_name', 'extra': 'field'}}
+        ))
+        c = Catalog(self='http://host.com/catalog', session=sess)
+        result = c.create({'body': {'name': 'client_name'}})
+        self.assertEqual(result.self, location)
+        self.assertEqual(result['body']['name'], 'server_name')
+        self.assertEqual(result['body']['extra'], 'field')
+
+    def test_create_201_without_body_does_not_update(self):
+        sess = mock.MagicMock()
+        location = 'http://host.com/somewhere'
+        sess.post = mock.MagicMock(return_value=self._mkresp(
+            status_code=201,
+            headers={'Location': location},
+            payload=None
+        ))
+        c = Catalog(self='http://host.com/catalog', session=sess)
+        result = c.create({'body': {'name': 'original'}})
+        self.assertEqual(result.self, location)
+        self.assertEqual(result['body']['name'], 'original')
+
     def test_accepts_document_instance(self):
         sess = mock.MagicMock()
         location = 'http://host.com/somewhere'
