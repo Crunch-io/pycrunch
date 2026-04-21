@@ -119,7 +119,9 @@ class Importer(object):
         if mimetype is None:
             mimetype, encoding = mimetypes.guess_type(filename)
 
-        source_url = self.add_source(ds, filename, open(path, 'rb'), mimetype)
+        with open(path, 'rb') as contents:
+            source_url = self.add_source(ds, filename, contents, mimetype)
+
         return self.create_batch_from_source(ds, source_url)
 
     def stream_rows(self, ds, values):
