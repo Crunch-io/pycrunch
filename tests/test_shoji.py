@@ -10,7 +10,7 @@ from requests import Response
 
 from pycrunch.progress import DefaultProgressTracking, SimpleTextBarProgressTracking
 from pycrunch.shoji import Catalog, CreateMixin, TaskProgressTimeoutError, TaskError, Index, Order, Entity
-from pycrunch.lemonpy import URL
+from pycrunch.lemonpy import URL, ServerError
 
 
 class TestShojiCreation(TestCase):
@@ -117,6 +117,92 @@ class TestShojiCreation(TestCase):
 
         c = Catalog(self='http://host.com/catalog', session=sess)
         self.assertRaises(TaskError, c.create, {'somedata': 1})
+
+    def _mk_server_error(self, status_code):
+        resp = self._mkresp(
+            status_code=status_code,
+            payload={'value': 'bad gateway'},
+        )
+        resp.request = self._mkresp(url='http://host.com/progress/1')
+        return ServerError(resp)
+
+    def test_create_retries_transient_gateway_error(self):
+        sess = mock.MagicMock()
+        sess.progress_tracking = DefaultProgressTracking(timeout=1.0, interval=0.01)
+        sess.post = mock.MagicMock(return_value=self._mkresp(
+            status_code=202,
+            headers={'Location': 'http://host.com/somewhere'},
+            payload={"value": 'http://host.com/progress/1'}
+        ))
+        sess.get = mock.MagicMock(side_effect=[
+            self._mkresp(status_code=200, payload={'value': {'progress': 30}}),
+            self._mk_server_error(502),
+            self._mk_server_error(503),
+            self._mkresp(status_code=200, payload={'value': {'progress': 100}}),
+        ])
+
+        c = Catalog(self='http://host.com/catalog', session=sess)
+        c.create({'somedata': 1})
+
+        # The 502 and 503 were retried and the task eventually completed.
+        self.assertEqual(sess.get.call_count, 4)
+
+    def test_create_gives_up_after_max_retries(self):
+        sess = mock.MagicMock()
+        sess.progress_tracking = DefaultProgressTracking(timeout=1.0, interval=0.01)
+        sess.post = mock.MagicMock(return_value=self._mkresp(
+            status_code=202,
+            headers={'Location': 'http://host.com/somewhere'},
+            payload={"value": 'http://host.com/progress/1'}
+        ))
+        sess.get = mock.MagicMock(side_effect=[
+            self._mk_server_error(502),
+            self._mk_server_error(502),
+            self._mk_server_error(502),
+            self._mk_server_error(502),
+        ])
+
+        c = Catalog(self='http://host.com/catalog', session=sess)
+        self.assertRaises(ServerError, c.create, {'somedata': 1})
+        # Initial attempt + 3 retries (default max_retries), then propagate.
+        self.assertEqual(sess.get.call_count, 4)
+
+    def test_create_does_not_retry_non_transient_server_error(self):
+        sess = mock.MagicMock()
+        sess.progress_tracking = DefaultProgressTracking(timeout=1.0, interval=0.01)
+        sess.post = mock.MagicMock(return_value=self._mkresp(
+            status_code=202,
+            headers={'Location': 'http://host.com/somewhere'},
+            payload={"value": 'http://host.com/progress/1'}
+        ))
+        sess.get = mock.MagicMock(side_effect=[
+            self._mk_server_error(500),
+            self._mkresp(status_code=200, payload={'value': {'progress': 100}}),
+        ])
+
+        c = Catalog(self='http://host.com/catalog', session=sess)
+        self.assertRaises(ServerError, c.create, {'somedata': 1})
+        # 500 is not in the default retry_statuses; propagates on first poll.
+        self.assertEqual(sess.get.call_count, 1)
+
+    def test_create_retries_can_be_disabled(self):
+        sess = mock.MagicMock()
+        sess.progress_tracking = DefaultProgressTracking(
+            timeout=1.0, interval=0.01, max_retries=0)
+        sess.post = mock.MagicMock(return_value=self._mkresp(
+            status_code=202,
+            headers={'Location': 'http://host.com/somewhere'},
+            payload={"value": 'http://host.com/progress/1'}
+        ))
+        sess.get = mock.MagicMock(side_effect=[
+            self._mk_server_error(502),
+            self._mkresp(status_code=200, payload={'value': {'progress': 100}}),
+        ])
+
+        c = Catalog(self='http://host.com/catalog', session=sess)
+        self.assertRaises(ServerError, c.create, {'somedata': 1})
+        # max_retries=0 disables retrying; the first 502 propagates.
+        self.assertEqual(sess.get.call_count, 1)
 
     def test_create_progressbar(self):
         sess = mock.MagicMock()

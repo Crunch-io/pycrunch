@@ -301,6 +301,11 @@ def wait_progress(r, session, progress_tracker=None, entity=None):
     See `pycrunch.progress.DefaultProgressTracking` and
     `pycrunch.progress.SimpleTextBarProgressTracking` for documentation
     regarding progress trackers.
+
+    Individual progress polls that fail with a transient server error are
+    retried according to the progress tracker's retry policy (see
+    ``retry_statuses`` and ``max_retries`` on the tracker). Retries happen
+    within the overall progress ``timeout``.
     """
     progress_url = r.payload["value"]
 
@@ -310,8 +315,21 @@ def wait_progress(r, session, progress_tracker=None, entity=None):
     timeout = progress_tracker.timeout
     progress_state = progress_tracker.start_progress()
     begin = time.time()
+    retries = 0
     while timeout is None or time.time() - begin < timeout:
-        prog_r = session.get(progress_url)
+        try:
+            prog_r = session.get(progress_url)
+        except ServerError as exc:
+            # Individual polls can fail with a transient gateway error
+            # (e.g. the edge/load balancer briefly cannot reach the
+            # upstream during a rollout). Retry those a bounded number of
+            # times rather than failing the whole wait.
+            if not progress_tracker.should_retry(exc, retries):
+                raise
+            retries += 1
+            time.sleep(progress_tracker.interval)
+            continue
+        retries = 0
         progress = prog_r.payload["value"]
         progress_tracker.on_progress(progress_state, progress)
         if progress["progress"] == -1:
